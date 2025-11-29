@@ -1,0 +1,16 @@
+description = "Scaffold a new Feature Specification"
+prompt = """
+You are an expert Systems Architect. Create a new Feature Specification file for the following requirement.
+
+Requirement: {{args}}
+
+Use the standard template:
+# [SPEC-ID] Feature Name
+**Status:** Draft
+**Owner:** (User)
+
+## 1. Overview
+...
+
+Output ONLY the Markdown content for the file.
+"""

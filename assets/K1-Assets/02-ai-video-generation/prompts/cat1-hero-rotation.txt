@@ -1,0 +1,96 @@
+CATEGORY 1: HERO ROTATION VIDEO PROMPT
+========================================
+
+Seed Images Required:
+All 30 rotation frames from /01-keyshot-seeds/cat1-hero-rotations/
+
+AI Video Tool: Google Imagen Video, Runway Gen-3, or Pika Labs
+
+Duration: 10-12 seconds
+Frame Rate: 24fps
+Resolution: 1920x1080
+
+
+PRIMARY PROMPT:
+===============
+
+"Smooth 360-degree rotation of K1-Lightwave dual edge-lit light guide plate device, starting from front-facing view rotating clockwise through complete circle returning to start position, camera position fixed and stationary throughout entire rotation, device rotates on vertical axis at constant angular velocity, professional product photography lighting with key light from upper right maintaining consistent illumination across all angles, rim light from behind creating edge definition, neutral gray gradient background transitioning from light gray at top to medium gray at bottom, maintain exact device geometry with no shape morphing or dimensional changes, preserve aluminum housing material properties showing brushed metal texture, transparent acrylic light guide plate exhibits subtle internal refractions and edge clarity, no LED illumination active showing device in powered-off state, rotation completes in exactly 10 seconds creating hypnotic showcase effect,cinematic color grading emphasizing premium materials and precision engineering"
+
+
+TECHNICAL PARAMETERS:
+=====================
+
+Animation Type: Image sequence interpolation
+Rotation Speed: 36 degrees per second (constant)
+Camera: Fixed position, no movement
+Lighting: Consistent across all frames
+Background: Studio gradient (not pure black or white)
+
+
+CRITICAL SUCCESS CRITERIA:
+==========================
+
+1. Rotation must be SMOOTH (no stuttering or speed changes)
+2. Device geometry must stay EXACT (no AI hallucination of extra features)
+3. Lighting must remain CONSISTENT (no flickering or shadow jumps)
+4. Background must stay NEUTRAL (not distracting from device)
+5. Materials must look PREMIUM (brushed aluminum, clear acrylic)
+
+
+WHAT TO WATCH FOR:
+==================
+
+❌ AI might try to:
+- Add buttons, screens, or UI elements that don't exist
+- Change the device shape/proportions mid-rotation
+- Add unwanted reflections or environmental elements
+- Speed up/slow down rotation inconsistently
+- Make background too busy or colorful
+
+✅ Should result in:
+- Clean, professional product showcase
+- Even rotation speed throughout
+- Premium material appearance
+- Studio photography quality
+
+
+IF OUTPUT DOESN'T HIT THE MARK:
+================================
+
+Problem: Rotation is jerky or uneven
+Solution: Upload ALL 30 frames instead of subset, ensure frame sequence is numbered correctly
+
+Problem: Device shape changes during rotation
+Solution: Add to prompt "maintain exact device dimensions of 32cm length × 5.4cm width throughout all frames, no geometric morphing"
+
+Problem: Lighting looks inconsistent
+Solution: Pre-process seed images to ensure lighting matches across all 30 frames before uploading
+
+Problem: Background is distracting
+Solution: Add "studio gradient background only, no environmental elements, no reflections, clean product photography aesthetic"
+
+
+LANDING PAGE INTEGRATION:
+=========================
+
+Use Case: Secondary showcase in hardware specs section
+Placement: Bento grid large video area (8-column span)
+Purpose: Shows device from all angles, builds trust through transparency
+Autoplay: Yes, loop infinitely, muted
+
+
+PRIORITY LEVEL: Medium
+======================
+
+This video is nice to have but not critical for launch.
+Focus on Category 4 (light show) and Category 3 (context) first.
+Only generate this if you have time after hero videos are complete.
+
+
+FALLBACK PLAN:
+==============
+
+If AI video generation fails after 3 attempts:
+- Use static renders in a CSS-animated carousel
+- Or skip rotation video entirely for V1 launch
+- Add in post-launch update once better AI tools available

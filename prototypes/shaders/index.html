@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K1 Snapwave // Analytic Shader Experiment</title>
+    <style>
+        body { margin: 0; background: #000; overflow: hidden; font-family: 'JetBrains Mono', monospace; color: #FFB84D; }
+        canvas { display: block; width: 100vw; height: 100vh; }
+        
+        /* UI Overlay */
+        #ui { 
+            position: absolute; top: 20px; left: 20px; 
+            background: rgba(5,5,8,0.9); 
+            padding: 16px; 
+            border-left: 2px solid #FFB84D; 
+            border-radius: 0px 4px 4px 0px;
+            width: 320px;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+        }
+        h1 { margin: 0 0 8px 0; font-size: 14px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #E6E9EF; }
+        .meta { font-size: 10px; color: #6EE7F3; margin-bottom: 12px; letter-spacing: 0.05em; }
+        
+        .control { margin-bottom: 12px; }
+        .label { display: flex; justify-content: space-between; font-size: 10px; color: #8890a0; margin-bottom: 4px; text-transform: uppercase; }
+        .value { color: #fff; }
+        input[type="range"] { width: 100%; cursor: pointer; accent-color: #FFB84D; height: 2px; background: #333; appearance: none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 10px; height: 10px; background: #FFB84D; border-radius: 0; }
+    </style>
+</head>
+<body>
+    <div id="ui">
+        <h1>Snapwave Analytic</h1>
+        <div class="meta">MODE: PROCEDURAL_TIMETRAVEL</div>
+        
+        <div class="control">
+            <div class="label"><span>Speed</span> <span class="value" id="val-speed">1.0</span></div>
+            <input type="range" id="speed" min="0.1" max="3.0" step="0.1" value="1.0">
+        </div>
+        <div class="control">
+            <div class="label"><span>Decay (Trail)</span> <span class="value" id="val-decay">0.5</span></div>
+            <input type="range" id="decay" min="0.1" max="2.0" step="0.1" value="0.5">
+        </div>
+        <div class="control">
+            <div class="label"><span>Spread (Blur)</span> <span class="value" id="val-spread">0.015</span></div>
+            <input type="range" id="spread" min="0.001" max="0.05" step="0.001" value="0.015">
+        </div>
+        <div class="control">
+            <div class="label"><span>Falloff (Height)</span> <span class="value" id="val-falloff">3.5</span></div>
+            <input type="range" id="falloff" min="1.0" max="8.0" step="0.1" value="3.5">
+        </div>
+        <div class="control">
+            <div class="label"><span>Density (Audio)</span> <span class="value" id="val-density">1.0</span></div>
+            <input type="range" id="density" min="0.5" max="3.0" step="0.1" value="1.0">
+        </div>
+        <div class="control">
+            <div class="label"><span>Exposure</span> <span class="value" id="val-exposure">2.5</span></div>
+            <input type="range" id="exposure" min="0.5" max="5.0" step="0.1" value="2.5">
+        </div>
+    </div>
+
+    <canvas id="glcanvas"></canvas>
+
+    <script>
+        // --- SHADER SOURCE ---
+        const vsSource = `#version 300 es
+        in vec4 a_position;
+        out vec2 v_uv;
+        void main() {
+            gl_Position = a_position;
+            v_uv = a_position.xy * 0.5 + 0.5;
+        }`;
+
+        const fsSource = `#version 300 es
+        precision highp float;
+
+        uniform float u_time;
+        uniform vec2 u_resolution;
+        
+        uniform float u_speed;
+        uniform float u_decay;
+        uniform float u_spread;
+        uniform float u_falloff;
+        uniform float u_density;
+        uniform float u_exposure;
+
+        out vec4 fragColor;
+
+        #define PI 3.14159265359
+
+        // --- ANALYTIC LOGIC (The "Brain") ---
+        
+        // Simulates the "Chromagram" (12 musical notes) varying over time
+        // In the real firmware, this comes from FFT. Here, we simulate it.
+        float getNoteAmplitude(int noteIndex, float t) {
+            // Use sine waves at different prime frequencies to simulate 
+            // "random" musical activation of notes C through B
+            float seed = float(noteIndex) * 12.9898;
+            return 0.5 + 0.5 * sin(t * 0.5 + seed);
+        }
+
+        // The Canonical Snapwave Algorithm from LightwaveOS
+        // S(x,t) = tanh(2 * Sum(N[i] * sin(w * t * (1 + 0.5i))))
+        float getSourcePosition(float t) {
+            float oscillation = 0.0;
+            
+            // Sum of 12 Notes (Chromagram)
+            for(int i=0; i<12; i++) {
+                // 1. Get simulated amplitude for this note (N[i])
+                // Threshold: Only add if > 0.1 (simulating noise gate)
+                float amp = getNoteAmplitude(i, t * 0.5);
+                if(amp > 0.1) {
+                     // 2. Calculate Phase: w * t * (1 + 0.5*i)
+                    // Base freq in docs is 0.001 rad/ms = 1.0 rad/sec roughly
+                    float phase = t * 1.0 * (1.0 + float(i) * 0.5);
+                    
+                    oscillation += amp * sin(phase);
+                }
+            }
+            
+            // 3. The "Snap": Hyperbolic Tangent Normalization
+            // "tanh(oscillation * 2.0f)"
+            // We scale the input by u_density to allow user control over "complexity"
+            return tanh(oscillation * 2.0 * u_density) * 0.45; 
+        }
+
+        // --- PHYSICS LOGIC (The "Plate") ---
+
+        float gaussian(float x, float mean, float sigma) {
+            float delta = x - mean;
+            return exp(-(delta * delta) / (2.0 * sigma * sigma));
+        }
+
+        void main() {
+            // Normalize coords: X centered at 0, Y starts at 0 (bottom)
+            vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+            uv.x = (uv.x - 0.5) * (u_resolution.x / u_resolution.y); // Aspect correct X
+            
+            float distY = uv.y;
+            
+            // 1. TIME TRAVEL
+            // Light at height Y was emitted in the past
+            // travelTime = distance / speed
+            float travelTime = distY / max(0.01, u_speed);
+            float emissionTime = u_time - travelTime;
+            
+            // 2. SOURCE RECONSTRUCTION
+            // Where was the LED head at that moment?
+            float sourceX = getSourcePosition(emissionTime);
+            
+            // 3. LATERAL DIFFUSION (The V-Shape)
+            // Sigma increases with Y (scattering)
+            float sigma = u_spread * (0.2 + distY * 3.0);
+            float lateralIntensity = gaussian(uv.x, sourceX, sigma);
+            
+            // 4. VERTICAL ATTENUATION (Beer-Lambert)
+            float verticalBeam = exp(-distY * u_falloff);
+            
+            // 5. TRAIL DECAY (Simulated Fade)
+            // Older light (higher up) is dimmer
+            float timeDecay = exp(-travelTime * u_decay);
+            
+            // 6. HALATION (Source Hotspot)
+            float hotSpot = smoothstep(0.05, 0.0, distY) * 4.0;
+            
+            // COMBINE
+            float totalIntensity = lateralIntensity * verticalBeam * timeDecay;
+            totalIntensity += hotSpot * lateralIntensity; // Add hotspot
+            
+            // COLOR & EXPOSURE
+            vec3 colorEdge = vec3(1.0, 0.72, 0.3); // Warm Amber
+            vec3 colorCore = vec3(1.0, 1.0, 1.0); // White
+            
+            // Mix to white as it gets brighter
+            vec3 color = mix(colorEdge, colorCore, clamp(totalIntensity * 0.8, 0.0, 1.0));
+            
+            // Apply Exposure
+            color *= totalIntensity * u_exposure;
+            
+            // Dither (Anti-banding)
+            float noise = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453);
+            color += (noise - 0.5) / 255.0;
+
+            fragColor = vec4(color, 1.0);
+        }
+        `;
+
+        // --- WEBGL BOILERPLATE ---
+        const canvas = document.getElementById('glcanvas');
+        const gl = canvas.getContext('webgl2');
+
+        if (!gl) { alert('WebGL2 not supported'); }
+
+        function createShader(gl, type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error(gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+            return shader;
+        }
+
+        const program = gl.createProgram();
+        gl.attachShader(program, createShader(gl, gl.VERTEX_SHADER, vsSource));
+        gl.attachShader(program, createShader(gl, gl.FRAGMENT_SHADER, fsSource));
+        gl.linkProgram(program);
+
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            console.error(gl.getProgramInfoLog(program));
+        }
+
+        // Full screen quad
+        const positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+
+        const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+        gl.enableVertexAttribArray(positionAttributeLocation);
+        gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+
+        // Uniforms
+        const uniforms = {
+            time: gl.getUniformLocation(program, "u_time"),
+            resolution: gl.getUniformLocation(program, "u_resolution"),
+            speed: gl.getUniformLocation(program, "u_speed"),
+            decay: gl.getUniformLocation(program, "u_decay"),
+            spread: gl.getUniformLocation(program, "u_spread"),
+            falloff: gl.getUniformLocation(program, "u_falloff"),
+            density: gl.getUniformLocation(program, "u_density"),
+            exposure: gl.getUniformLocation(program, "u_exposure"),
+        };
+
+        const state = {
+            speed: 1.0,
+            decay: 0.5,
+            spread: 0.015,
+            falloff: 3.5,
+            density: 1.0,
+            exposure: 2.5
+        };
+
+        // UI Binding
+        document.querySelectorAll('input').forEach(el => {
+            el.addEventListener('input', (e) => {
+                state[e.target.id] = parseFloat(e.target.value);
+                document.getElementById(`val-${e.target.id}`).innerText = state[e.target.id];
+            });
+        });
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            gl.viewport(0, 0, canvas.width, canvas.height);
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function render(time) {
+            gl.useProgram(program);
+            
+            gl.uniform1f(uniforms.time, time * 0.001);
+            gl.uniform2f(uniforms.resolution, canvas.width, canvas.height);
+            
+            gl.uniform1f(uniforms.speed, state.speed);
+            gl.uniform1f(uniforms.decay, state.decay);
+            gl.uniform1f(uniforms.spread, state.spread);
+            gl.uniform1f(uniforms.falloff, state.falloff);
+            gl.uniform1f(uniforms.density, state.density);
+            gl.uniform1f(uniforms.exposure, state.exposure);
+
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+            requestAnimationFrame(render);
+        }
+        requestAnimationFrame(render);
+
+    </script>
+</body>
+</html>

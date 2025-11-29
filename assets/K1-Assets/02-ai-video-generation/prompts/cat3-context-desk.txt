@@ -1,0 +1,122 @@
+CATEGORY 3: CONTEXT DESK VIDEO PROMPT (CRITICAL ASSET #2)
+===========================================================
+
+Seed Image Required:
+k1-desk-angle.png from /01-keyshot-seeds/cat3-context-scale/
+
+AI Video Tool: Google Imagen Video, Runway Gen-3, or Pika Labs
+
+Duration: 8 seconds
+Frame Rate: 24fps
+Resolution: 1920x1080
+
+
+PRIMARY PROMPT:
+===============
+
+"K1-Lightwave dual edge-lit device positioned on modern desk workspace alongside mechanical keyboard and wireless mouse, viewed from 45-degree elevated angle showing device in natural desktop environment, warm tungsten desk lamp creating soft pools of light from left side, ambient room light providing gentle fill illumination, device positioned as accent lighting element behind monitor edge visible at frame top, camera executes slow controlled dolly push-in movement over 8 seconds gradually tightening frame on device while maintaining 45-degree viewing angle, background shows blurred home office or creative studio space with neutral wall tones and minimal decor, depth of field creates soft bokeh on background elements while keeping device and immediate desk area in sharp focus, color palette emphasizes warm cozy workspace atmosphere with device appearing as premium desk accessory, subtle shadows cast by device and keyboard creating depth and grounding objects in physical space, composition follows rule of thirds with device positioned at right intersection point, natural vignette darkens frame edges directing eye toward device center, cinematic color grading with lifted blacks and warm highlights creating approachable yet sophisticated mood"
+
+
+ALTERNATIVE PROMPT (Simpler, Less Hallucination Risk):
+=======================================================
+
+"K1-Lightwave light bar sitting on wooden desk surface next to computer keyboard, viewed from slight overhead angle, warm desk lighting from side creating soft shadows, camera slowly pushes in toward device over 8 seconds, clean modern workspace aesthetic, device appears as premium desk accessory, shallow depth of field blurs background, maintain exact device geometry with 32cm × 5.4cm dimensions, no shape changes or added features"
+
+
+TECHNICAL PARAMETERS:
+=====================
+
+Camera Movement: Slow dolly push (closer to subject)
+Movement Speed: 10-15cm total travel distance over 8 seconds
+Depth of Field: Shallow (f/2.8 equivalent)
+Focus Point: Device center
+Color Temperature: 3200K-3800K (warm)
+
+
+CRITICAL SUCCESS CRITERIA:
+==========================
+
+1. Device must look REAL and TANGIBLE (not CG)
+2. Desk environment must feel LIVED-IN (not sterile showroom)
+3. Lighting must create ATMOSPHERE (cozy workspace vibe)
+4. Camera movement must be SMOOTH (no acceleration/jitter)
+5. Device must remain RECOGNIZABLE (correct dimensions/proportions)
+
+
+WHAT TO WATCH FOR:
+==================
+
+❌ AI might try to:
+- Add screens, displays, or UI to the device
+- Change device size relative to keyboard (should be ~2.5× keyboard width)
+- Make background too detailed/distracting
+- Add cords, cables, or accessories that shouldn't exist
+- Change device color/materials
+
+✅ Should result in:
+- "This is a real product I could buy" feeling
+- Device looks premium but approachable
+- Environment feels like viewer's own desk
+- Subtle movement draws eye without being distracting
+
+
+COMPOSITION REFERENCE:
+======================
+
+Think: Apple product photography meets "setup tour" YouTube aesthetic
+- Not sterile studio: warm, inviting, personal
+- Not cluttered chaos: clean, intentional, organized
+- Device as hero but not isolated: part of ecosystem
+
+
+IF OUTPUT DOESN'T HIT THE MARK:
+================================
+
+Problem: Device looks fake or CG
+Solution: Adjust seed image lighting to be more naturalistic, add subtle surface imperfections before upload
+
+Problem: Background too detailed/distracting
+Solution: Add "extremely blurred background, bokeh effect, all background elements out of focus"
+
+Problem: Device proportions wrong vs keyboard
+Solution: Add "K1 device is 32 centimeters long, approximately 2.5 times width of mechanical keyboard, maintain accurate size relationships"
+
+Problem: Too cold/clinical feeling
+Solution: Emphasize "warm tungsten lighting, cozy workspace atmosphere, inviting and personal aesthetic"
+
+
+LANDING PAGE INTEGRATION:
+=========================
+
+Use Case: PRIMARY trust-building asset
+Placement: Bento grid or as hero right-side video
+Purpose: Makes device feel REAL, helps viewer imagine it on their desk
+Autoplay: Yes, loop 3-5 times then pause, muted
+Lazy Load: No (critical above-fold content)
+
+
+PRIORITY LEVEL: CRITICAL
+========================
+
+This is your second-most important video after the Category 4 light show.
+
+WHY IT'S CRITICAL:
+- Light show creates desire ("that's cool!")
+- Context shot creates belief ("that's real!")
+- Without this, device feels abstract/fake
+- This video answers "where would this actually go?"
+
+Launch blocker if missing: YES (need minimum 2 videos: Cat4 + Cat3)
+
+
+FALLBACK PLAN:
+==============
+
+If AI video generation completely fails after 5 attempts:
+
+Option A: Use high-quality still image with subtle CSS parallax effect
+Option B: Shoot actual desk photo with phone (if device prototype exists)
+Option C: Commission freelance 3D artist for realistic desk environment render
+
+DO NOT LAUNCH WITHOUT SOME FORM OF CONTEXT SHOT.
+The landing page needs this to convert skeptical buyers.

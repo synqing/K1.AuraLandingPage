@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>K1 SVG Path Generator (Simple)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: system-ui;
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 1rem;
+      background: #1a1a1a;
+      color: #f0f0f0;
+    }
+    #canvas {
+      background: #000;
+      border: 1px solid #333;
+      margin: 2rem 0;
+    }
+    #preview {
+      background: #000;
+      border: 1px solid #333;
+      padding: 2rem;
+      margin: 2rem 0;
+      border-radius: 8px;
+    }
+    textarea {
+      width: 100%;
+      min-height: 200px;
+      font-family: monospace;
+      font-size: 12px;
+      padding: 1rem;
+      background: #0a0a0a;
+      color: #0f0;
+      border: 1px solid #333;
+      border-radius: 4px;
+    }
+    button {
+      background: #FFB84D;
+      color: #000;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-right: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>K1 SVG Path Generator</h1>
+  <p>Using browser's native font rendering to extract paths</p>
+
+  <button onclick="generateSVG()">Generate K1 SVG</button>
+  <button onclick="copyToClipboard()">Copy SVG</button>
+
+  <canvas id="canvas" width="800" height="400"></canvas>
+
+  <h3>Generated SVG:</h3>
+  <div id="preview"></div>
+
+  <h3>SVG Code:</h3>
+  <textarea id="output"></textarea>
+
+  <script>
+    function generateSVG() {
+      // Create simple SVG with text element converted to path-like strokes
+      const svg = `<svg viewBox="0 0 400 200" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+  <defs>
+    <!-- Rotating gradient definition -->
+    <linearGradient id="k1-rotating-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:transparent;stop-opacity:0" />
+      <stop offset="30%" style="stop-color:#FFB84D;stop-opacity:0.4" />
+      <stop offset="50%" style="stop-color:#FFB84D;stop-opacity:1" />
+      <stop offset="70%" style="stop-color:#FFB84D;stop-opacity:0.4" />
+      <stop offset="100%" style="stop-color:transparent;stop-opacity:0" />
+    </linearGradient>
+  </defs>
+
+  <!-- Use text element with Manrope font -->
+  <text x="50%" y="50%"
+        font-family="Manrope, sans-serif"
+        font-size="180"
+        font-weight="800"
+        text-anchor="middle"
+        dominant-baseline="middle"
+        fill="none"
+        stroke="rgba(242,242,242,0.6)"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="k1-text">K1</text>
+</svg>`;
+
+      document.getElementById('preview').innerHTML = svg;
+      document.getElementById('output').value = svg;
+
+      // Also draw on canvas for reference
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.font = 'bold 200px Manrope';
+      ctx.strokeStyle = 'rgba(242,242,242,0.6)';
+      ctx.lineWidth = 2;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.strokeText('K1', canvas.width / 2, canvas.height / 2);
+    }
+
+    function copyToClipboard() {
+      const textarea = document.getElementById('output');
+      textarea.select();
+      document.execCommand('copy');
+      alert('Copied!');
+    }
+
+    // Auto-generate on load
+    window.addEventListener('load', generateSVG);
+  </script>
+</body>
+</html>

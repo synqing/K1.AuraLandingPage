@@ -1,0 +1,822 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>K1 – Audio-Reactive Light Guide</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=Manrope:wght@500;700;800&family=Space+Grotesk:wght@400;500;600&family=JetBrains+Mono&display=swap"
+      rel="stylesheet"
+    />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Custom scrollbar for a cleaner look */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #000;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #333;
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #555;
+      }
+
+      /* Ensure canvas sits correctly */
+      #canvas-container canvas {
+        display: block;
+      }
+
+      /* K1 SVG Rotating Border Animation */
+      @property --k1-angle {
+        syntax: '<angle>';
+        initial-value: 0deg;
+        inherits: false;
+      }
+
+      @keyframes k1-rotate {
+        to {
+          --k1-angle: 360deg;
+        }
+      }
+
+      .k1-svg-wrapper {
+        --k1-angle: 0deg;
+        animation: k1-rotate 2.5s linear infinite;
+      }
+
+      /* Animated gradient for SVG stroke */
+      #k1-rotating-gradient {
+        animation: k1-rotate 2.5s linear infinite;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-black text-[#F2F2F2] antialiased selection:bg-[#FFB84D]/30 selection:text-black overflow-y-scroll overflow-x-hidden snap-y snap-mandatory h-screen"
+  >
+    <main class="relative w-full min-h-screen">
+      <!-- GLOBAL OVERLAY INDICATORS / MINIMAL CHROME -->
+      <div
+        class="pointer-events-none fixed inset-x-0 top-0 z-50 flex items-start justify-between px-4 sm:px-8 pt-4 text-[clamp(0.65rem,0.8vw,0.85rem)] font-['Space_Grotesk'] text-zinc-500 uppercase tracking-[0.16em]"
+      >
+        <span class="opacity-60">K - 1</span>
+        <span class="hidden sm:inline-flex gap-3 items-center">
+          <span class="h-[0.12rem] w-[1.1rem] rounded-full bg-zinc-700/70"></span>
+          <span class="h-[0.12rem] w-[1.1rem] rounded-full bg-zinc-700/40"></span>
+          <span class="h-[0.12rem] w-[1.1rem] rounded-full bg-zinc-700/30"></span>
+          <span class="h-[0.12rem] w-[1.1rem] rounded-full bg-zinc-700/20"></span>
+          <span class="h-[0.12rem] w-[1.1rem] rounded-full bg-zinc-700/10"></span>
+        </span>
+      </div>
+
+      <!-- PROGRESS RAIL -->
+      <div
+        class="pointer-events-none fixed right-4 sm:right-8 top-1/2 -translate-y-1/2 z-50 hidden sm:flex flex-col items-center gap-2 text-[clamp(0.6rem,0.7vw,0.75rem)] font-['Space_Grotesk'] text-zinc-500"
+      >
+        <div class="flex flex-col items-center gap-1">
+          <span class="text-[clamp(0.55rem,0.6vw,0.7rem)] tracking-[0.18em] uppercase">Init</span>
+          <div class="h-[7rem] w-[0.09rem] bg-zinc-800/80 overflow-hidden rounded-full">
+            <div class="h-1/5 w-full bg-[#FFB84D]/80"></div>
+            <div class="h-4/5 w-full bg-zinc-800/80"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- WRAPPER FOR SNAP SECTIONS -->
+      <div class="relative w-full min-h-screen">
+        <!-- 1. THE PRELUDE -->
+        <section class="relative h-screen w-full snap-start overflow-hidden">
+          <!-- THREE.JS BACKGROUND LAYER -->
+          <div class="absolute inset-0 z-0">
+            <div id="canvas-container" class="w-full h-full"></div>
+            <!-- Vignette Overlay to blend 3D into edges -->
+            <div
+              class="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_50%_50%,transparent_20%,rgba(0,0,0,0.8)_90%)]"
+            ></div>
+          </div>
+
+          <!-- BOTTOM GRADIENT FADE -->
+          <div
+            class="pointer-events-none absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black via-black/60 to-transparent z-10"
+          ></div>
+
+          <!-- CONTENT -->
+          <div
+            class="relative z-20 flex h-full w-full flex-col items-center justify-center px-4 sm:px-10 pb-12"
+          >
+            <!-- Massive Outline K1 with Rotating Border Trace -->
+            <div class="relative flex items-center justify-center flex-col">
+              <div
+                class="w-full flex items-center justify-center"
+                style="height: clamp(5rem, 14vw, 12rem)"
+              >
+                <svg
+                  viewBox="0 0 743.2 576"
+                  xmlns="http://www.w3.org/2000/svg"
+                  preserveAspectRatio="xMidYMid meet"
+                  class="w-auto h-full mix-blend-overlay opacity-90"
+                >
+                  <defs>
+                    <filter id="k1-glow">
+                      <feGaussianBlur stdDeviation="8" result="blur" />
+                      <feFlood flood-color="#FFB84D" flood-opacity="0.6" />
+                      <feComposite in2="blur" operator="in" />
+                      <feMerge>
+                        <feMergeNode />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+                  </defs>
+
+                  <!-- Base white outline stroke -->
+                  <path
+                    d="M 108.8 576 L 0 576 L 0 0 L 108.8 0 L 108.8 265.6 L 328 0 L 460.8 0 L 220 284 L 476 576 L 338.4 576 L 108.8 313.6 L 108.8 576 Z M 743.2 576 L 632 576 L 632 118.4 L 524 184.8 L 524 64.8 L 632 0 L 743.2 0 L 743.2 576 Z"
+                    fill="none"
+                    stroke="rgba(242,242,242,0.6)"
+                    stroke-width="6"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+
+                  <!-- 1 trace (starts first - from top right corner) -->
+                  <path
+                    d="M 743.2 0 L 743.2 576 L 632 576 L 632 118.4 L 524 184.8 L 524 64.8 L 632 0 L 743.2 0"
+                    fill="none"
+                    stroke="#FFB84D"
+                    stroke-width="10"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-dasharray="150 3000"
+                    filter="url(#k1-glow)"
+                    opacity="0.9"
+                  >
+                    <animate
+                      attributeName="stroke-dashoffset"
+                      from="3150"
+                      to="0"
+                      dur="10s"
+                      repeatCount="indefinite"
+                    />
+                  </path>
+
+                  <!-- K trace (starts after 1 finishes - from top right of vertical stroke) -->
+                  <path
+                    d="M 108.8 0 L 108.8 265.6 L 328 0 L 460.8 0 L 220 284 L 476 576 L 338.4 576 L 108.8 313.6 L 108.8 576 L 0 576 L 0 0 L 108.8 0"
+                    fill="none"
+                    stroke="#FFB84D"
+                    stroke-width="10"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-dasharray="150 3000"
+                    filter="url(#k1-glow)"
+                    opacity="0.9"
+                  >
+                    <animate
+                      attributeName="stroke-dashoffset"
+                      from="3150"
+                      to="0"
+                      dur="10s"
+                      begin="5s"
+                      repeatCount="indefinite"
+                    />
+                  </path>
+                </svg>
+              </div>
+              <!-- Subtle blur behind text to separate from light beam -->
+              <div
+                class="pointer-events-none absolute inset-0 mix-blend-screen opacity-30 blur-3xl bg-[radial-gradient(circle_at_50%_50%,rgba(255,184,77,0.15)_0,transparent_60%)]"
+              ></div>
+            </div>
+
+            <!-- Bottom Meta -->
+            <div
+              class="pointer-events-none absolute inset-x-0 bottom-0 flex justify-between items-end px-4 sm:px-10 pb-6 sm:pb-10 text-[clamp(0.7rem,0.95vw,1rem)] font-['Space_Grotesk'] leading-relaxed"
+            >
+              <span class="text-zinc-500 uppercase tracking-[0.16em]">
+                Audio-Reactive Light Guide
+              </span>
+              <span class="flex items-center gap-2 text-zinc-500">
+                <span class="hidden sm:inline tracking-[0.16em] uppercase"
+                  >Scroll to Initialize</span
+                >
+                <span class="inline sm:hidden tracking-[0.16em] uppercase">Scroll</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-3.5 w-3.5 text-[#FFB84D]"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+              </span>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. THE EXPLODED VIEW -->
+        <section class="relative h-[200vh] w-full snap-start">
+          <div class="sticky top-0 h-screen flex items-center justify-center overflow-hidden">
+            <!-- Center Visual Placeholder -->
+            <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
+              <div class="relative aspect-[4/3] w-[min(70vw,40rem)] max-w-[40rem]">
+                <div
+                  class="absolute inset-0 rounded-3xl bg-gradient-to-tr from-zinc-900 via-zinc-950 to-black shadow-[0_0_5rem_rgba(0,0,0,0.9)]"
+                >
+                  <div
+                    class="absolute inset-px rounded-[1.45rem] bg-[radial-gradient(circle_at_20%_0%,rgba(255,184,77,0.25)_0,transparent_50%),radial-gradient(circle_at_80%_100%,rgba(80,120,255,0.4)_0,transparent_55%)] opacity-70 mix-blend-screen"
+                  ></div>
+                  <div class="absolute inset-0 flex items-center justify-center">
+                    <div
+                      class="h-[60%] w-[72%] rounded-3xl bg-gradient-to-br from-black via-zinc-900 to-black/90 shadow-[0_0_4rem_rgba(0,0,0,1)] flex items-center justify-center"
+                    >
+                      <span
+                        class="text-[clamp(0.8rem,1vw,1.1rem)] font-['Space_Grotesk'] text-zinc-500 uppercase tracking-[0.22em]"
+                      >
+                        Exploded Assembly
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  class="absolute -inset-[12%] bg-[radial-gradient(circle_at_50%_0%,rgba(255,184,77,0.25)_0,transparent_60%),radial-gradient(circle_at_10%_100%,rgba(15,118,255,0.45)_0,transparent_55%)] opacity-30 blur-3xl"
+                ></div>
+              </div>
+            </div>
+
+            <!-- Floating Text Cards -->
+            <div
+              class="relative z-20 flex h-full w-full max-w-5xl flex-col justify-center px-4 sm:px-10"
+            >
+              <div class="flex flex-col gap-10 sm:gap-12">
+                <!-- Card 1 -->
+                <article
+                  class="max-w-sm sm:max-w-md bg-black/40 backdrop-blur-xl text-left text-[clamp(0.9rem,1.05vw,1.15rem)] font-['Space_Grotesk'] leading-relaxed text-zinc-200/90 shadow-[0_0_3rem_rgba(0,0,0,0.7)] border border-white/5 rounded-2xl"
+                >
+                  <div class="relative overflow-hidden rounded-2xl">
+                    <div
+                      class="absolute inset-0 bg-gradient-to-br from-white/5 via-white/0 to-white/0"
+                    ></div>
+                    <div class="relative p-5 sm:p-6">
+                      <p
+                        class="uppercase text-[clamp(0.82rem,0.95vw,1.05rem)] tracking-[0.22em] text-zinc-500 mb-2"
+                      >
+                        Module · 01
+                      </p>
+                      <h2
+                        class="font-['Manrope'] font-semibold tracking-tight text-[clamp(1.3rem,1.9vw,2.1rem)] mb-1"
+                      >
+                        CNC Aluminum Chassis
+                      </h2>
+                      <p class="text-[clamp(0.98rem,1.1vw,1.2rem)] text-zinc-400">
+                        A milled mono-block shell acting as both structure and heatsink, optimized
+                        for silent thermal bleed.
+                      </p>
+                    </div>
+                  </div>
+                </article>
+
+                <!-- Card 2 -->
+                <article
+                  class="ml-auto max-w-sm sm:max-w-md bg-black/40 backdrop-blur-xl text-left text-[clamp(0.9rem,1.05vw,1.15rem)] font-['Space_Grotesk'] leading-relaxed text-zinc-200/90 shadow-[0_0_3rem_rgba(0,0,0,0.7)] border border-white/5 rounded-2xl"
+                >
+                  <div class="relative overflow-hidden rounded-2xl">
+                    <div
+                      class="absolute inset-0 bg-gradient-to-bl from-[#FFB84D]/10 via-white/0 to-white/0"
+                    ></div>
+                    <div class="relative p-5 sm:p-6">
+                      <p
+                        class="uppercase text-[clamp(0.82rem,0.95vw,1.05rem)] tracking-[0.22em] text-zinc-500 mb-2"
+                      >
+                        Module · 02
+                      </p>
+                      <h2
+                        class="font-['Manrope'] font-semibold tracking-tight text-[clamp(1.3rem,1.9vw,2.1rem)] mb-1"
+                      >
+                        Dual Edge-Lit Diffusion
+                      </h2>
+                      <p class="text-[clamp(0.98rem,1.1vw,1.2rem)] text-zinc-400">
+                        Counter-phased light channels sculpt motion with volumetric depth, not
+                        surface bloom.
+                      </p>
+                    </div>
+                  </div>
+                </article>
+
+                <!-- Card 3 -->
+                <article
+                  class="max-w-sm sm:max-w-md bg-black/40 backdrop-blur-xl text-left text-[clamp(0.9rem,1.05vw,1.15rem)] font-['Space_Grotesk'] leading-relaxed text-zinc-200/90 shadow-[0_0_3rem_rgba(0,0,0,0.7)] border border-white/5 rounded-2xl"
+                >
+                  <div class="relative overflow-hidden rounded-2xl">
+                    <div
+                      class="absolute inset-0 bg-gradient-to-tr from-sky-500/20 via-white/0 to-white/0"
+                    ></div>
+                    <div class="relative p-5 sm:p-6">
+                      <p
+                        class="uppercase text-[clamp(0.82rem,0.95vw,1.05rem)] tracking-[0.22em] text-zinc-500 mb-2"
+                      >
+                        Module · 03
+                      </p>
+                      <h2
+                        class="font-['Manrope'] font-semibold tracking-tight text-[clamp(1.3rem,1.9vw,2.1rem)] mb-1"
+                      >
+                        ESP32-S3 Logic Core
+                      </h2>
+                      <p class="text-[clamp(0.98rem,1.1vw,1.2rem)] text-zinc-400">
+                        Real-time spectral analysis and motion synthesis on-device, no uplink, no
+                        latency tax.
+                      </p>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </div>
+
+            <div
+              class="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(0,0,0,0.9)_0,rgba(0,0,0,1)_65%)]"
+            ></div>
+          </div>
+        </section>
+
+        <!-- 3. THE SPECTRUM -->
+        <section class="relative h-screen w-full snap-start overflow-hidden">
+          <div class="absolute inset-0">
+            <div class="absolute inset-0 bg-black"></div>
+            <div
+              class="absolute inset-0 mix-blend-screen opacity-90 bg-[radial-gradient(circle_at_0%_0%,rgba(255,184,77,0.6)_0,transparent_55%),radial-gradient(circle_at_100%_100%,rgba(56,189,248,0.7)_0,transparent_60%),radial-gradient(circle_at_50%_120%,rgba(37,99,235,0.75)_0,transparent_55%)]"
+            ></div>
+            <div
+              class="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent"
+            ></div>
+          </div>
+
+          <div class="relative z-10 flex h-full w-full items-center justify-center px-4 sm:px-10">
+            <div class="max-w-3xl text-center">
+              <h2
+                class="font-['Inter'] font-extrabold tracking-tight uppercase leading-none text-[clamp(2.5rem,5vw,3.5rem)] mb-5 sm:mb-6"
+              >
+                Physics, Not Pixels.
+              </h2>
+              <p
+                class="font-['Space_Grotesk'] text-[clamp(1.05rem,1.25vw,1.35rem)] text-zinc-300 leading-relaxed"
+              >
+                Fluid dynamics and diffusion models run natively at
+                <span class="font-semibold text-[#FFB84D]">120Hz</span>, mapping sound pressure into
+                tangible, volumetric light.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. THE MANIFESTO -->
+        <section class="relative h-screen w-full snap-start">
+          <div class="absolute inset-0 flex flex-col md:flex-row">
+            <div class="relative flex-1 bg-black flex items-center justify-center px-4 sm:px-10">
+              <div class="max-w-md">
+                <h3
+                  class="font-['Inter'] font-extrabold tracking-tight uppercase leading-tight text-[clamp(2.2rem,4vw,3.2rem)]"
+                >
+                  For Pioneers Only.
+                </h3>
+              </div>
+            </div>
+            <div
+              class="relative flex-1 bg-gradient-to-b from-black via-black to-zinc-950 flex items-center justify-center px-4 sm:px-10"
+            >
+              <div class="max-w-md">
+                <p
+                  class="font-['Space_Grotesk'] text-[clamp(1.05rem,1.25vw,1.35rem)] text-zinc-300 leading-relaxed"
+                >
+                  This is raw hardware.
+                  <span class="text-zinc-50 font-semibold">No app. No cloud. No accounts.</span>
+                  Just you, the spectrum, and the chassis that translates it into motion.
+                </p>
+              </div>
+            </div>
+          </div>
+          <div
+            class="pointer-events-none absolute inset-y-0 left-1/2 w-[0.11rem] -translate-x-1/2 bg-gradient-to-b from-transparent via-[#FFB84D]/40 to-transparent opacity-60 hidden md:block"
+          ></div>
+        </section>
+
+        <!-- 5. THE ALLOCATION -->
+        <section class="relative h-screen w-full snap-start">
+          <div class="absolute inset-0 bg-black"></div>
+          <div
+            class="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,184,77,0.18)_0,transparent_55%),radial-gradient(circle_at_10%_110%,rgba(37,99,235,0.28)_0,transparent_60%)] opacity-60"
+          ></div>
+          <div
+            class="absolute inset-0 bg-gradient-to-t from-black via-black/96 to-transparent"
+          ></div>
+
+          <div class="relative z-10 flex h-full items-center justify-center px-4 sm:px-10">
+            <div class="w-full max-w-md sm:max-w-lg">
+              <div
+                class="mx-auto w-full rounded-3xl bg-black/60 backdrop-blur-2xl shadow-[0_0_4rem_rgba(0,0,0,1)] border border-white/5"
+              >
+                <div class="relative p-6 sm:p-8">
+                  <div class="flex items-center justify-between mb-6 sm:mb-8">
+                    <div
+                      class="flex flex-col gap-1 text-[clamp(0.78rem,0.9vw,0.95rem)] font-['Space_Grotesk'] tracking-[0.18em] uppercase text-zinc-500"
+                    >
+                      <span class="text-xs">Allocation</span>
+                      <span class="text-[clamp(0.86rem,1vw,1rem)] text-zinc-200">
+                        001<span class="text-zinc-600">/</span>100
+                      </span>
+                    </div>
+                    <div class="text-right">
+                      <span
+                        class="font-['Inter'] font-semibold tracking-tight text-[clamp(1.6rem,2.1vw,2.3rem)] text-[#FFB84D] leading-none"
+                      >
+                        $249
+                      </span>
+                      <p
+                        class="mt-1 text-[clamp(0.82rem,0.95vw,1rem)] font-['Space_Grotesk'] text-zinc-500"
+                      >
+                        Founders series hardware allocation.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="space-y-5">
+                    <div class="space-y-2">
+                      <label
+                        for="email"
+                        class="block text-[clamp(0.86rem,0.98vw,1.05rem)] font-['Space_Grotesk'] text-zinc-400"
+                      >
+                        Receive an access link
+                      </label>
+                      <div class="relative">
+                        <div
+                          class="pointer-events-none absolute inset-y-0 left-0 flex items-center"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-4 w-4 text-zinc-600"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <path
+                              d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4a2 2 0 0 1-2-2V6c0-1.1.9-2 2-2z"
+                            ></path>
+                            <polyline points="22,6 12,13 2,6"></polyline>
+                          </svg>
+                        </div>
+                        <input
+                          id="email"
+                          type="email"
+                          placeholder="you@domain"
+                          class="w-full bg-transparent pl-6 pr-2 pt-2 pb-1 text-[clamp(1rem,1.1vw,1.2rem)] font-['Space_Grotesk'] text-zinc-200 placeholder:text-zinc-700 focus:outline-none"
+                        />
+                        <div
+                          class="mt-1 h-[0.07rem] w-full bg-gradient-to-r from-transparent via-zinc-700 to-transparent"
+                        ></div>
+                      </div>
+                      <p
+                        class="text-[clamp(0.78rem,0.92vw,0.96rem)] font-['Space_Grotesk'] text-zinc-600"
+                      >
+                        No spam. One message when your allocation window opens.
+                      </p>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-2">
+                      <button
+                        class="group relative inline-flex items-center gap-2 rounded-full bg-transparent px-4 py-2 text-[clamp(0.9rem,1vw,1.05rem)] font-['Space_Grotesk'] text-zinc-200 uppercase tracking-[0.18em]"
+                      >
+                        <span
+                          class="absolute inset-0 rounded-full bg-[#FFB84D]/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                        ></span>
+                        <span class="relative">Request Access</span>
+                        <span class="relative flex h-5 w-5 items-center justify-center">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            class="h-3 w-3 text-[#FFB84D]"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                          >
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                          </svg>
+                        </span>
+                      </button>
+
+                      <span
+                        class="text-[clamp(0.78rem,0.9vw,0.96rem)] font-['Space_Grotesk'] text-zinc-600"
+                      >
+                        Zero obligation. Pure signal.
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- THREE.JS LOGIC -->
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+      }
+    </script>
+
+    <script type="module">
+      import * as THREE from 'three';
+      import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+      import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+      import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+      // --- CONFIG ---
+      const CONTAINER_ID = 'canvas-container';
+      const NATIVE_RESOLUTION = 160.0;
+      const LED_COUNT = 160;
+      const LED_STRIDE = 4;
+
+      // --- STATE ---
+      const state = {
+        leds: new Float32Array(LED_COUNT * LED_STRIDE),
+        chromagram: new Float32Array(12),
+        waveform_peak: 0.0,
+        time: 0,
+        hue_pos: 0.0,
+        decay: 0.1,
+      };
+
+      // --- SCENE SETUP ---
+      const scene = new THREE.Scene();
+      scene.background = null; // Transparent so CSS gradient shows if needed, though we use full black usually
+
+      // Camera setup optimized to show the bar BELOW the center text
+      // Text is center. We move mesh down.
+      const camera = new THREE.PerspectiveCamera(
+        45,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        100
+      );
+      camera.position.set(0, 2, 35);
+
+      const renderer = new THREE.WebGLRenderer({
+        antialias: false,
+        powerPreference: 'high-performance',
+        alpha: true,
+      });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.2;
+
+      const container = document.getElementById(CONTAINER_ID);
+      if (container) container.appendChild(renderer.domElement);
+
+      // No OrbitControls to prevent scroll jacking on landing page
+
+      // --- POST PROCESS ---
+      const composer = new EffectComposer(renderer);
+      composer.addPass(new RenderPass(scene, camera));
+      const bloomPass = new UnrealBloomPass(
+        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        1.2,
+        0.6,
+        0.1
+      );
+      composer.addPass(bloomPass);
+
+      // --- SHADER ---
+      const ledTexture = new THREE.DataTexture(
+        state.leds,
+        LED_COUNT,
+        1,
+        THREE.RGBAFormat,
+        THREE.FloatType
+      );
+      ledTexture.minFilter = THREE.NearestFilter;
+      ledTexture.magFilter = THREE.NearestFilter;
+
+      const K1_PHYSICS_SHADER = {
+        vertex: `
+            varying vec2 vUv;
+            void main() {
+                vUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+        `,
+        fragment: `
+            uniform sampler2D uLedState;
+            uniform float uResolution;
+            uniform float uFalloff;
+            uniform float uExposure;
+            uniform float uSpread;
+            uniform float uBaseLevel;
+            varying vec2 vUv;
+
+            float gaussian(float x, float sigma) {
+                return exp(-(x * x) / (2.0 * sigma * sigma));
+            }
+
+            void main() {
+                float dist = vUv.y;
+                // Beam Falloff
+                float vertical_beam = exp(-dist * uFalloff);
+                
+                vec3 accumulatedColor = vec3(0.0);
+                float totalWeight = 0.0;
+                float samples = 7.0; 
+                float pixelWidth = 1.0 / uResolution;
+                float currentSigma = uSpread * (0.2 + dist * 3.0);
+
+                for(float i = -samples; i <= samples; i++) {
+                    float offset = i * pixelWidth;
+                    float weight = gaussian(offset, currentSigma);
+                    vec2 sampleUv = vec2(clamp(vUv.x + offset, 0.0, 1.0), 0.5);
+                    vec3 ledColor = texture2D(uLedState, sampleUv).rgb;
+                    accumulatedColor += ledColor * weight;
+                    totalWeight += weight;
+                }
+                
+                vec3 finalColor = accumulatedColor / totalWeight;
+                float hotSpot = smoothstep(0.02, 0.0, dist) * 8.0;
+                vec3 outColor = finalColor * (vertical_beam + uBaseLevel);
+                outColor = outColor * uExposure + (vec3(1.0) * hotSpot * length(finalColor));
+
+                gl_FragColor = vec4(outColor, 1.0); // Alpha 1.0
+            }
+        `,
+      };
+
+      // Default physics settings
+      const uniforms = {
+        uLedState: { value: ledTexture },
+        uResolution: { value: NATIVE_RESOLUTION },
+        uFalloff: { value: 3.5 },
+        uExposure: { value: 6.0 },
+        uSpread: { value: 0.015 },
+        uBaseLevel: { value: 0.0 },
+      };
+
+      const lgpMaterial = new THREE.ShaderMaterial({
+        uniforms: uniforms,
+        vertexShader: K1_PHYSICS_SHADER.vertex,
+        fragmentShader: K1_PHYSICS_SHADER.fragment,
+        side: THREE.DoubleSide,
+        transparent: true,
+      });
+
+      // Geometry: 32x6 ratio
+      const geometry = new THREE.PlaneGeometry(32, 6);
+      const lgpMesh = new THREE.Mesh(geometry, lgpMaterial);
+
+      // POSITIONING: Moved down to y = -4.0 to sit under the text center
+      lgpMesh.position.y = -4.0;
+      scene.add(lgpMesh);
+
+      // Floor Reflection (Glossy)
+      const floor = new THREE.Mesh(
+        new THREE.PlaneGeometry(120, 120),
+        new THREE.MeshBasicMaterial({ color: 0x030303 })
+      );
+      floor.rotation.x = -Math.PI / 2;
+      floor.position.y = -7.0; // Lower floor
+      scene.add(floor);
+
+      // --- LOGIC ---
+      function shift_leds_up() {
+        for (let i = LED_COUNT - 1; i > 0; i--) {
+          const c = i * LED_STRIDE;
+          const p = (i - 1) * LED_STRIDE;
+          state.leds[c] = state.leds[p];
+          state.leds[c + 1] = state.leds[p + 1];
+          state.leds[c + 2] = state.leds[p + 2];
+          state.leds[c + 3] = state.leds[p + 3];
+        }
+      }
+
+      function hsv_to_rgb(h, s, v) {
+        let r, g, b, i, f, p, q, t;
+        h = h % 1;
+        if (h < 0) h += 1;
+        i = Math.floor(h * 6);
+        f = h * 6 - i;
+        p = v * (1 - s);
+        q = v * (1 - f * s);
+        t = v * (1 - (1 - f) * s);
+        switch (i % 6) {
+          case 0:
+            r = v;
+            g = t;
+            b = p;
+            break;
+          case 1:
+            r = q;
+            g = v;
+            b = p;
+            break;
+          case 2:
+            r = p;
+            g = v;
+            b = t;
+            break;
+          case 3:
+            r = p;
+            g = q;
+            b = v;
+            break;
+          case 4:
+            r = t;
+            g = p;
+            b = v;
+            break;
+          case 5:
+            r = v;
+            g = p;
+            b = q;
+            break;
+        }
+        return [r, g, b];
+      }
+
+      function updateSimulation(dt) {
+        // Ghost Audio
+        if (Math.random() > 0.95) {
+          const note = [0, 3, 6, 9][Math.floor(Math.random() * 4)];
+          state.chromagram[note] = 1.0;
+        }
+        for (let i = 0; i < 12; i++) state.chromagram[i] *= 0.94;
+
+        // Decay
+        for (let i = 0; i < LED_COUNT * LED_STRIDE; i++) state.leds[i] *= 1.0 - state.decay;
+        shift_leds_up();
+
+        // Oscillation
+        let oscillation = 0;
+        let millis = state.time * 1000;
+        for (let i = 0; i < 12; i++) {
+          if (state.chromagram[i] > 0.05) {
+            oscillation += state.chromagram[i] * Math.sin(millis * 0.001 * (1.0 + i * 0.5));
+          }
+        }
+        oscillation = Math.tanh(oscillation * 2.0);
+
+        let center = LED_COUNT / 2;
+        let pos = Math.floor(center + oscillation * center * 0.9);
+        if (pos < 0) pos = 0;
+        if (pos >= LED_COUNT) pos = LED_COUNT - 1;
+
+        state.hue_pos += 0.002;
+        let [r, g, b] = hsv_to_rgb(state.hue_pos, 1.0, 1.0);
+
+        const idx = pos * LED_STRIDE;
+        state.leds[idx] = r;
+        state.leds[idx + 1] = g;
+        state.leds[idx + 2] = b;
+        state.leds[idx + 3] = 1.0;
+      }
+
+      // --- LOOP ---
+      let lastTime = 0;
+      function animate(t) {
+        requestAnimationFrame(animate);
+        const dt = (t - lastTime) / 1000;
+        lastTime = t;
+        state.time += dt;
+
+        updateSimulation(dt);
+        ledTexture.needsUpdate = true;
+        composer.render();
+      }
+
+      window.addEventListener('resize', () => {
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        composer.setSize(window.innerWidth, window.innerHeight);
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+      });
+
+      animate(0);
+    </script>
+  </body>
+</html>

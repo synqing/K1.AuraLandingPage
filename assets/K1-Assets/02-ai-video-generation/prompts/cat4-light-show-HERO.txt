@@ -1,0 +1,189 @@
+CATEGORY 4: LIGHT SHOW VIDEO - THE HERO (MOST CRITICAL ASSET)
+================================================================
+
+Seed Image Required:
+k1-dark-three-quarter.png from /01-keyshot-seeds/cat4-light-ready-dark/
+
+AI Video Tool: Google Imagen Video (preferred), Runway Gen-3, or Pika Labs
+
+Duration: 12 seconds
+Frame Rate: 24fps or 30fps (test both)
+Resolution: 1920x1080
+
+
+🔥 PRIMARY PROMPT - THE MONEY SHOT 🔥
+=====================================
+
+"Dual edge-lit light guide plate activating with synchronized addressable RGB LED visualization pattern, one hundred sixty individually controlled LEDs per edge creating precise color addressability, light pattern starts from center and radiates outward in symmetrical wave motion toward both ends of device, color spectrum transitions smoothly from deep electric blue to vibrant cyan to warm amber to soft magenta creating flowing gradient wash across transparent acrylic light guide panel, light diffusing evenly through engineered acrylic creating volumetric glow effect where colors blend at boundaries, subtle intensity variation synchronized to implied musical beat pattern with peaks at 0.5 second intervals suggesting audio-reactive behavior, camera executes slow controlled dolly movement from right to left over 12 seconds maintaining perfect side profile view of device, pure black void background providing maximum contrast for LED glow, subtle halo effect around device edges where brightest LED zones create soft bloom in camera, light bleeding naturally beyond physical device boundaries, maintain exact device geometry with no shape morphing, preserve aluminum housing as dark silhouette while acrylic plate glows internally, add subtle lens flare when brightest cyan LEDs hit peak intensity around 4 second mark, cinematic color grading emphasizing saturated LED colors while keeping black levels crushed for drama"
+
+
+ALTERNATIVE PROMPT (Simpler, Less Risk):
+=========================================
+
+"K1-Lightwave dual edge-lit device with LEDs illuminating from top and bottom edges, colors flowing from blue to purple to orange in smooth waves, light glowing through clear acrylic panel, slow camera slide from side, pure black background, 12 seconds, cinematic lighting"
+
+
+COLOR SCHEME VARIATIONS TO TRY:
+================================
+
+VARIATION A - Cool Spectrum (Clinical Precision):
+"LED pattern uses only cool colors: deep blue → cyan → white → light blue, creating ice-like clinical precision feel, slower color transitions emphasizing technical sophistication over entertainment"
+
+VARIATION B - Warm Sunset (Cozy Energy):
+"LED pattern transitions warm amber → orange → red → magenta, creating cozy studio atmosphere, faster pulsing pattern suggesting energetic music rather than ambient soundscape"
+
+VARIATION C - Rainbow Spectrum (Maximum Flexibility):
+"Full spectrum color wheel transition hitting all hues: red → orange → yellow → green → cyan → blue → magenta → back to red, suggesting maximum creative flexibility and customization possibilities"
+
+
+TECHNICAL PARAMETERS:
+=====================
+
+Animation Pattern: Center-out wave propagation
+Color Transition: 2-3 second cycles
+Beat Sync: Implied 120 BPM rhythm (optional, enhances audio-reactive feel)
+Camera Movement: 15-20cm lateral dolly, constant speed
+Bloom Intensity: Subtle (not overdone)
+
+
+CRITICAL SUCCESS CRITERIA:
+==========================
+
+This video MUST accomplish these specific goals:
+
+1. ✅ Make viewer think "I've never seen light behave like that before"
+2. ✅ Clearly show the DUAL-EDGE lighting architecture (light from top AND bottom)
+3. ✅ Demonstrate that colors can CHANGE and FLOW (not static)
+4. ✅ Suggest SYNCHRONIZATION/TIMING without showing actual audio
+5. ✅ Make the device feel PREMIUM and technically sophisticated, not toy-like
+
+
+WHAT TO WATCH FOR:
+==================
+
+❌ AI might screw up:
+- Device geometry changing (panel warping, edges morphing)
+- Light appearing from CENTER of panel instead of EDGES
+- Colors having hard boundaries instead of smooth gradients
+- Black background turning gray or adding environment
+- Camera movement jerky or having speed changes
+- Bloom effects too intense (looks fake)
+- Hallucinating buttons, screens, or UI elements
+
+✅ Should achieve:
+- Light CLEARLY emanating from both edge strips
+- Smooth color blending where adjacent zones meet
+- Rhythmic pulsing creating implied beat
+- Pure black background (RGB 0,0,0)
+- Premium, expensive, desirable aesthetic
+- "Holy shit, I want that" emotional response
+
+
+COMPOSITION REFERENCE:
+======================
+
+Think: Blade Runner 2049 + Apple product video + music visualizer
+- Cinematic lighting and color grading
+- Precise, controlled technical execution
+- Emotional impact through color and rhythm
+- Premium materials clearly visible
+
+
+IF OUTPUT DOESN'T HIT THE MARK:
+================================
+
+Problem: Colors look muddy or blend poorly
+Solution: "maintain high color saturation throughout, colors should remain distinct even when adjacent, use gradient blending but preserve color intensity"
+
+Problem: Light doesn't appear to come from edges
+Solution: "light emission originates specifically from top edge PCB strip and bottom edge PCB strip, 160 LED point sources per edge clearly visible as origin of light diffusion into acrylic"
+
+Problem: Too static, not enough motion
+Solution: "increase animation speed to 2x, color transitions complete in 2-3 seconds instead of 4-5, add secondary pulse pattern overlaid on primary gradient creating layered visual complexity"
+
+Problem: Too busy, feels chaotic
+Solution: "single slow gradient sweep from left to right, blue to amber only, one complete cycle over 12 seconds, minimal intensity variation, emphasize smooth elegance over excitement"
+
+Problem: Device shape morphing or changing
+Solution: "maintain exact device dimensions of 32cm length × 5.4cm width × 0.4cm depth throughout all frames, no geometric changes, preserve aluminum frame as fixed dark silhouette, only acrylic panel illuminates"
+
+
+LANDING PAGE INTEGRATION:
+=========================
+
+Placement: FIRST THING USERS SEE
+- Hero section, right side (or full-width option)
+- Above the fold, immediate visibility
+- Autoplay, loop infinitely, muted
+- No lazy loading (must load immediately)
+
+
+The psychological sequence:
+1. User lands on page
+2. Video immediately catches attention with unusual light behavior
+3. Brain thinks "what is this?" (curiosity engaged)
+4. Eyes flick left to headline: "320 LEDs. Dual Edge-Lit. Audio-Reactive"
+5. Brain connects visual (light show) with explanation (specs)
+6. Instant understanding: "Oh, this creates those patterns"
+7. Desire triggers: "I want to control those patterns myself"
+
+
+If this video doesn't create that sequence, NOTHING else on the page matters.
+
+This is the asset that justifies:
+- The $249 price point
+- The March 2026 wait
+- The pre-order risk
+- The entire purchase decision
+
+
+PRIORITY LEVEL: ABSOLUTE CRITICAL
+==================================
+
+This is NOT optional. This IS the product.
+
+Without this video:
+- Product looks like generic LED strip ❌
+- Value proposition unclear ❌
+- Price seems unjustified ❌
+- No emotional desire created ❌
+
+With this video:
+- Product looks unique and innovative ✅
+- Technical capability obvious ✅
+- Premium positioning established ✅
+- Desire and FOMO triggered ✅
+
+
+TRY 3-5 VARIATIONS until you get one that makes YOU think "holy shit"
+
+
+ABSOLUTE WORST CASE BACKUP PLAN:
+=================================
+
+If AI video generation completely fails after 5+ attempts:
+
+Option A: Manual Animation in Blender
+- Keyframe LED colors manually in Blender
+- Render actual animated sequence
+- More work but perfect control
+- 2-3 days additional timeline
+
+Option B: Programmatic Generation
+- Use Three.js to create real-time WebGL animation
+- Matches your existing 3D preview work
+- Runs in browser, no video file needed
+- Could be even better than pre-rendered video
+
+Option C: Still Images with Cross-Fade
+- Create 6-8 stills showing different LED states
+- Use CSS/JS to cross-fade between them
+- Less impressive but still demonstrates capability
+- Last resort only
+
+
+DO NOT LAUNCH WITHOUT SOME FORM OF LIGHT ANIMATION.
+The entire value proposition depends on showing the visual magic.
+
+
+GENERATE THIS FIRST. GET IT RIGHT. EVERYTHING ELSE IS SECONDARY.

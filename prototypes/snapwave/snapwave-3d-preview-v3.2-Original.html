@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K1 Lightwave // ORGANIC KERNEL FIXED</title>
+    <style>
+        /* Dark Industrial Theme */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'JetBrains Mono', monospace; background: #020203; color: #E6E9EF; overflow: hidden; }
+        
+        #canvas-container { position: absolute; inset: 0; z-index: 1; }
+
+        /* Floating HUD */
+        #hud {
+            position: absolute; top: 24px; left: 24px; width: 340px;
+            background: rgba(8, 8, 10, 0.85);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-left: 3px solid #FFB84D;
+            backdrop-filter: blur(16px);
+            padding: 20px;
+            border-radius: 0 6px 6px 0;
+            z-index: 10;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+        }
+
+        h1 { font-size: 12px; font-weight: 800; letter-spacing: 0.15em; color: #FFB84D; text-transform: uppercase; margin-bottom: 6px; }
+        .status { font-size: 9px; color: #6EE7F3; margin-bottom: 20px; letter-spacing: 0.05em; opacity: 0.8; }
+
+        .control-group { margin-bottom: 16px; }
+        .label-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 10px; color: #8890A0; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+        .val { color: #fff; font-family: monospace; }
+
+        /* Custom Range Slider */
+        input[type=range] {
+            -webkit-appearance: none; width: 100%; background: transparent; height: 20px; cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 2px; background: #333; border-radius: 2px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%; background: #FFB84D; margin-top: -5px; box-shadow: 0 0 10px rgba(255,184,77,0.4); transition: transform 0.1s;
+        }
+        input[type=range]:hover::-webkit-slider-thumb { transform: scale(1.2); }
+        
+        .divider { height: 1px; background: rgba(255,255,255,0.08); margin: 20px 0; }
+    </style>
+</head>
+<body>
+
+    <div id="canvas-container"></div>
+
+    <div id="hud">
+        <h1>K1 Lightwave</h1>
+        <div class="status">KERNEL: ORGANIC_DIFFUSION_V3 (RGBA)</div>
+
+        <div class="control-group">
+            <div class="label-row"><span>Optical Density (Falloff)</span> <span class="val" id="val-falloff">3.5</span></div>
+            <input type="range" id="falloff" min="1.0" max="8.0" step="0.1" value="3.5">
+        </div>
+        <div class="control-group">
+            <div class="label-row"><span>Scattering (Blur)</span> <span class="val" id="val-spread">0.018</span></div>
+            <input type="range" id="spread" min="0.001" max="0.05" step="0.001" value="0.018">
+        </div>
+        <div class="control-group">
+            <div class="label-row"><span>Source Intensity (HDR)</span> <span class="val" id="val-exposure">3.0</span></div>
+            <input type="range" id="exposure" min="0.5" max="8.0" step="0.1" value="3.0">
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="control-group">
+            <div class="label-row"><span>Simulation Speed</span> <span class="val" id="val-decay">0.08</span></div>
+            <input type="range" id="decay" min="0.01" max="0.3" step="0.01" value="0.08">
+        </div>
+    </div>
+
+    <script type="importmap">
+        { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+        // --- CONFIGURATION ---
+        const NATIVE_RESOLUTION = 160;
+        const K1_WIDTH = 330;
+        const K1_HEIGHT = 54;
+        const K1_DEPTH = 4;
+        const SCALE = 0.1;
+
+        // --- GLOBAL STATE ---
+        const state = {
+            // CRITICAL FIX: Size * 4 for RGBA alignment
+            leds: new Float32Array(NATIVE_RESOLUTION * 4), 
+            chromagram: new Float32Array(12),
+            waveform_peak: 0.0,
+            time: 0,
+            decay: 0.08,
+            hue_pos: 0.0
+        };
+
+        // --- SCENE SETUP ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x050507);
+        scene.fog = new THREE.FogExp2(0x050507, 0.02); 
+
+        const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.set(0, 2, 45);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.0; 
+
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.autoRotate = true;
+        controls.autoRotateSpeed = 0.5;
+        controls.maxPolarAngle = Math.PI / 1.5; 
+
+        // --- POST PROCESSING ---
+        const composer = new EffectComposer(renderer);
+        composer.addPass(new RenderPass(scene, camera));
+
+        const bloomPass = new UnrealBloomPass(
+            new THREE.Vector2(window.innerWidth, window.innerHeight),
+            1.0, // Strength
+            0.7, // Radius (Softer glow)
+            0.1  // Threshold
+        );
+        composer.addPass(bloomPass);
+
+        // --- THE ORGANIC SHADER ---
+        
+        // CRITICAL FIX: RGBAFormat
+        const ledTexture = new THREE.DataTexture(state.leds, NATIVE_RESOLUTION, 1, THREE.RGBAFormat, THREE.FloatType);
+        ledTexture.minFilter = THREE.NearestFilter; 
+        ledTexture.magFilter = THREE.NearestFilter; 
+
+        const K1_ORGANIC_SHADER = {
+            vertex: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragment: `
+                uniform sampler2D uLedState;
+                uniform float uResolution;
+                uniform float uFalloff;
+                uniform float uExposure;
+                uniform float uSpread;
+                uniform float uTime;
+                
+                varying vec2 vUv;
+
+                float random(vec2 st) {
+                    return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+                }
+
+                float gaussian(float x, float sigma) {
+                    return exp(-(x * x) / (2.0 * sigma * sigma));
+                }
+
+                vec3 calculateLight(float dist) {
+                    // Conic Dispersion
+                    float currentSigma = uSpread * (0.5 + dist * 6.0); 
+
+                    float samples = 9.0; 
+                    float pixelWidth = 1.0 / uResolution;
+                    
+                    vec3 accColor = vec3(0.0);
+                    float weightSum = 0.0;
+
+                    for(float i = -samples; i <= samples; i++) {
+                        float offset = i * pixelWidth;
+                        float weight = gaussian(offset, currentSigma);
+                        
+                        vec2 sampleUv = vec2(clamp(vUv.x + offset, 0.0, 1.0), 0.5);
+                        vec3 ledColor = texture2D(uLedState, sampleUv).rgb;
+                        
+                        accColor += ledColor * weight;
+                        weightSum += weight;
+                    }
+                    
+                    vec3 fluidColor = accColor / weightSum;
+
+                    // Physics: Beer-Lambert
+                    float attenuation = exp(-dist * uFalloff);
+                    
+                    // Physics: Micro-Grain
+                    float grain = random(vUv * 20.0 + uTime * 0.2) * 0.08; 
+                    
+                    // Physics: Source Halation
+                    float hotSpot = smoothstep(0.1, 0.0, dist) * 4.0; 
+
+                    return fluidColor * (attenuation + grain) * (1.0 + hotSpot);
+                }
+
+                void main() {
+                    vec3 bottomLight = calculateLight(vUv.y);
+                    vec3 topLight = calculateLight(1.0 - vUv.y);
+                    
+                    vec3 finalColor = bottomLight + topLight;
+                    finalColor += vec3(0.02); // Base Plastic Reflectivity
+
+                    // Exposure
+                    finalColor *= uExposure;
+
+                    gl_FragColor = vec4(finalColor, 1.0);
+                }
+            `
+        };
+
+        const lgpUniforms = {
+            uLedState: { value: ledTexture },
+            uResolution: { value: NATIVE_RESOLUTION },
+            uFalloff: { value: 3.5 },     
+            uExposure: { value: 3.0 },    
+            uSpread: { value: 0.018 },    
+            uTime: { value: 0 }
+        };
+
+        const lgpMaterial = new THREE.ShaderMaterial({
+            uniforms: lgpUniforms,
+            vertexShader: K1_ORGANIC_SHADER.vertex,
+            fragmentShader: K1_ORGANIC_SHADER.fragment,
+            side: THREE.DoubleSide
+        });
+
+        const geometry = new THREE.PlaneGeometry(33, 5.4); 
+        const lgpMesh = new THREE.Mesh(geometry, lgpMaterial);
+        lgpMesh.position.y = 2.7; 
+        scene.add(lgpMesh);
+
+        // --- ENVIRONMENT ---
+        const floorGeo = new THREE.PlaneGeometry(100, 100);
+        const floorMat = new THREE.MeshPhysicalMaterial({ 
+            color: 0x080808, 
+            roughness: 0.2, 
+            metalness: 0.8,
+            clearcoat: 0.5 
+        });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        scene.add(floor);
+
+        const ambient = new THREE.AmbientLight(0xffffff, 0.05);
+        scene.add(ambient);
+
+        // --- PHYSICS SIMULATION (RGBA ADAPTED) ---
+
+        function hsv(h, s, v) {
+            let r, g, b, i, f, p, q, t;
+            h = h % 1;
+            i = Math.floor(h * 6); f = h * 6 - i;
+            p = v * (1 - s); q = v * (1 - f * s); t = v * (1 - (1 - f) * s);
+            switch (i % 6) {
+                case 0: r=v; g=t; b=p; break;
+                case 1: r=q; g=v; b=p; break;
+                case 2: r=p; g=v; b=t; break;
+                case 3: r=p; g=q; b=v; break;
+                case 4: r=t; g=p; b=v; break;
+                case 5: r=v; g=p; b=q; break;
+            }
+            return {r, g, b};
+        }
+
+        function updateAudio(dt) {
+            state.time += dt;
+            const notes = [0, 3, 6, 9];
+            if(Math.random() > 0.92) {
+                let n = notes[Math.floor(Math.random() * notes.length)];
+                state.chromagram[n] = 1.0;
+            }
+            for(let i=0; i<12; i++) state.chromagram[i] *= 0.94;
+            let beat = Math.pow((Math.sin(state.time * 3.5) + 1) / 2, 8.0);
+            state.waveform_peak = state.waveform_peak * 0.8 + beat * 0.2;
+        }
+
+        function snapwave() {
+            // 1. FADE
+            let fade = 1.0 - state.decay;
+            for(let i=0; i < NATIVE_RESOLUTION; i++) {
+                // Stride 4 for RGBA
+                state.leds[i*4] *= fade;     // R
+                state.leds[i*4+1] *= fade;   // G
+                state.leds[i*4+2] *= fade;   // B
+                state.leds[i*4+3] = 1.0;     // Alpha always 1
+            }
+
+            // 2. SHIFT
+            for(let i = NATIVE_RESOLUTION - 1; i > 0; i--) {
+                state.leds[i*4] = state.leds[(i-1)*4];
+                state.leds[i*4+1] = state.leds[(i-1)*4+1];
+                state.leds[i*4+2] = state.leds[(i-1)*4+2];
+            }
+
+            // 3. OSCILLATION
+            let oscillation = 0.0;
+            let millis = state.time * 1000;
+            for(let i=0; i<12; i++) {
+                if(state.chromagram[i] > 0.01) {
+                    oscillation += state.chromagram[i] * Math.sin(millis * 0.001 * (1.0 + i*0.5));
+                }
+            }
+            oscillation = Math.tanh(oscillation * 2.5);
+
+            let center = NATIVE_RESOLUTION / 2;
+            let pos = Math.floor(center + (oscillation * center * 0.95));
+            if(pos < 0) pos = 0; if(pos >= NATIVE_RESOLUTION) pos = NATIVE_RESOLUTION - 1;
+
+            // 4. INJECT
+            state.hue_pos += 0.001;
+            let col = hsv(state.hue_pos, 1.0, 1.0);
+            
+            let idx = pos * 4;
+            state.leds[idx] = col.r;
+            state.leds[idx+1] = col.g;
+            state.leds[idx+2] = col.b;
+            state.leds[idx+3] = 1.0; // Alpha
+        }
+
+        function updateTexture() {
+            ledTexture.needsUpdate = true;
+        }
+
+        // --- LOOP ---
+        let lastTime = 0;
+        function animate(t) {
+            requestAnimationFrame(animate);
+            let dt = (t - lastTime) / 1000;
+            lastTime = t;
+
+            updateAudio(dt || 0.016);
+            snapwave();
+            updateTexture();
+
+            lgpMaterial.uniforms.uTime.value = state.time;
+            controls.update();
+            composer.render();
+        }
+
+        // --- HANDLERS ---
+        document.getElementById('exposure').addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            lgpMaterial.uniforms.uExposure.value = val;
+            document.getElementById('val-exposure').innerText = val.toFixed(1);
+        });
+        document.getElementById('falloff').addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            lgpMaterial.uniforms.uFalloff.value = val;
+            document.getElementById('val-falloff').innerText = val.toFixed(1);
+        });
+        document.getElementById('spread').addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            lgpMaterial.uniforms.uSpread.value = val;
+            document.getElementById('val-spread').innerText = val.toFixed(3);
+        });
+        document.getElementById('decay').addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            state.decay = val;
+            document.getElementById('val-decay').innerText = val.toFixed(2);
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate(0);
+    </script>
+</body>
+</html>

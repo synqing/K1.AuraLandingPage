@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>K1 Lightwave // ORGANIC PHYSICS ENGINE</title>
+    <style>
+        body { margin: 0; background: #000; overflow: hidden; font-family: 'JetBrains Mono', monospace; color: #FFB84D; }
+        #canvas-container { position: absolute; inset: 0; }
+        
+        /* Minimal HUD */
+        #hud { 
+            position: absolute; top: 20px; left: 20px; 
+            background: rgba(5,5,8,0.9); 
+            padding: 16px; 
+            border-left: 2px solid #FFB84D; 
+            border-radius: 0px 4px 4px 0px;
+            pointer-events: auto;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            width: 320px;
+        }
+        h1 { margin: 0 0 8px 0; font-size: 14px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: #E6E9EF; }
+        .meta { font-size: 10px; color: #6EE7F3; margin-bottom: 12px; letter-spacing: 0.05em; }
+        
+        .control { margin-bottom: 12px; }
+        .label { display: flex; justify-content: space-between; font-size: 10px; color: #8890a0; margin-bottom: 4px; text-transform: uppercase; }
+        .value { color: #fff; }
+        input[type="range"] { width: 100%; cursor: pointer; accent-color: #FFB84D; height: 2px; background: #333; appearance: none; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 10px; height: 10px; background: #FFB84D; border-radius: 0; }
+        
+        .divider { height: 1px; background: rgba(255,255,255,0.1); margin: 15px 0; }
+    </style>
+</head>
+<body>
+    <div id="hud">
+        <h1>K1 Lightwave</h1>
+        <div class="meta">ENGINE: GLSL_PHOTON_TRANSPORT</div>
+        
+        <div class="control">
+            <div class="label"><span>Exposure (HDR)</span> <span class="value" id="val-exposure">6.0</span></div>
+            <input type="range" id="exposure" min="1.0" max="10.0" step="0.1" value="6.0">
+        </div>
+        <div class="control">
+            <div class="label"><span>Beam Falloff (Height)</span> <span class="value" id="val-falloff">3.5</span></div>
+            <input type="range" id="falloff" min="1.0" max="8.0" step="0.1" value="3.5">
+        </div>
+        <div class="control">
+            <div class="label"><span>Lateral Spread (Blur)</span> <span class="value" id="val-spread">0.015</span></div>
+            <input type="range" id="spread" min="0.0" max="0.05" step="0.001" value="0.015">
+        </div>
+        
+        <div class="divider"></div>
+
+        <div class="control">
+            <div class="label"><span>Snapwave Decay</span> <span class="value" id="val-decay">0.10</span></div>
+            <input type="range" id="decay" min="0.01" max="0.3" step="0.01" value="0.10">
+        </div>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <script type="importmap">
+        { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+        // --- CONSTANTS ---
+        const NATIVE_RESOLUTION = 160.0;
+        const LED_COUNT = 160;
+        const LED_STRIDE = 4;
+        
+        // --- STATE ---
+        const state = {
+            leds: new Float32Array(LED_COUNT * LED_STRIDE), 
+            chromagram: new Float32Array(12),
+            waveform_peak: 0.0,
+            time: 0,
+            hue_pos: 0.0,
+            decay: 0.10
+        };
+
+        // --- SCENE SETUP ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x000000); 
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 100);
+        camera.position.set(0, 2, 35);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+        // Important: We do ToneMapping manually in the shader/bloom combination, 
+        // but ACES helps map the super-bright HDR values back to screen space elegantly.
+        renderer.toneMapping = THREE.ACESFilmicToneMapping; 
+        renderer.toneMappingExposure = 1.0; 
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        const controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.autoRotate = false;
+
+        // --- POST PROCESS ---
+        const composer = new EffectComposer(renderer);
+        composer.addPass(new RenderPass(scene, camera));
+        
+        // We relax the bloom strength because the SHADER is now doing the heavy lifting (Exposure)
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 1.0, 0.5, 0.1);
+        composer.addPass(bloomPass);
+
+        // --- THE PHYSICS SHADER ---
+        const ledTexture = new THREE.DataTexture(state.leds, LED_COUNT, 1, THREE.RGBAFormat, THREE.FloatType);
+        ledTexture.minFilter = THREE.NearestFilter; // We do manual smoothing in the shader
+        ledTexture.magFilter = THREE.NearestFilter;
+
+        const K1_PHYSICS_SHADER = {
+            vertex: `
+                varying vec2 vUv;
+                void main() {
+                    vUv = uv;
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragment: `
+                uniform sampler2D uLedState;
+                uniform float uResolution;
+                uniform float uFalloff;
+                uniform float uExposure;
+                uniform float uSpread;
+                uniform float uBaseLevel;
+                
+                varying vec2 vUv;
+
+                float gaussian(float x, float sigma) {
+                    return exp(-(x * x) / (2.0 * sigma * sigma));
+                }
+
+                void main() {
+                    // 1. VERTICAL ATTENUATION (Beer-Lambert-ish)
+                    float dist = vUv.y;
+                    float vertical_beam = exp(-dist * uFalloff);
+                    
+                    // 2. LATERAL DIFFUSION (Variable Gaussian)
+                    vec3 accumulatedColor = vec3(0.0);
+                    float totalWeight = 0.0;
+                    
+                    float samples = 7.0; // High quality blur
+                    float pixelWidth = 1.0 / uResolution;
+                    
+                    // Scattering increases as we go up (Organic V-Shape)
+                    float currentSigma = uSpread * (0.2 + dist * 3.0);
+
+                    for(float i = -samples; i <= samples; i++) {
+                        float offset = i * pixelWidth;
+                        float weight = gaussian(offset, currentSigma);
+                        
+                        // Sample texture (Clamp to avoid edge wrapping)
+                        vec2 sampleUv = vec2(clamp(vUv.x + offset, 0.0, 1.0), 0.5);
+                        vec3 ledColor = texture2D(uLedState, sampleUv).rgb;
+                        
+                        accumulatedColor += ledColor * weight;
+                        totalWeight += weight;
+                    }
+                    
+                    vec3 finalColor = accumulatedColor / totalWeight;
+
+                    // 3. SOURCE HALATION (The "Die" Intensity)
+                    // Massive boost at the very bottom edge
+                    float hotSpot = smoothstep(0.02, 0.0, dist) * 8.0;
+                    
+                    // Combine
+                    vec3 outColor = finalColor * (vertical_beam + uBaseLevel);
+                    
+                    // HDR Exposure + Hotspot addition
+                    // We add hotspot to brightness, preserving color tint slightly
+                    outColor = outColor * uExposure + (vec3(1.0) * hotSpot * length(finalColor));
+
+                    gl_FragColor = vec4(outColor, 1.0);
+                }
+            `
+        };
+
+        const uniforms = {
+            uLedState: { value: ledTexture },
+            uResolution: { value: NATIVE_RESOLUTION },
+            uFalloff: { value: 3.5 },
+            uExposure: { value: 6.0 },
+            uSpread: { value: 0.015 },
+            uBaseLevel: { value: 0.005 } // Deep black
+        };
+
+        const lgpMaterial = new THREE.ShaderMaterial({
+            uniforms: uniforms,
+            vertexShader: K1_PHYSICS_SHADER.vertex,
+            fragmentShader: K1_PHYSICS_SHADER.fragment,
+            side: THREE.DoubleSide
+        });
+
+        // Geometry (32cm x 6cm Aspect Ratio)
+        const geometry = new THREE.PlaneGeometry(32, 6); 
+        const lgpMesh = new THREE.Mesh(geometry, lgpMaterial);
+        lgpMesh.position.y = 3;
+        scene.add(lgpMesh);
+
+        // Floor Reflection (Glossy Black)
+        const floor = new THREE.Mesh(
+            new THREE.PlaneGeometry(100, 100),
+            new THREE.MeshBasicMaterial({ color: 0x080808 })
+        );
+        floor.rotation.x = -Math.PI/2;
+        scene.add(floor);
+
+
+        // --- SNAPWAVE LOGIC ---
+        
+        function shift_leds_up() {
+            for(let i=LED_COUNT-1; i>0; i--) {
+                const c = i*LED_STRIDE;
+                const p = (i-1)*LED_STRIDE;
+                state.leds[c] = state.leds[p];
+                state.leds[c+1] = state.leds[p+1];
+                state.leds[c+2] = state.leds[p+2];
+                state.leds[c+3] = state.leds[p+3];
+            }
+        }
+
+        function hsv_to_rgb(h, s, v) {
+            let r, g, b, i, f, p, q, t;
+            h = h % 1;
+            if(h<0) h+=1;
+            i = Math.floor(h * 6); f = h * 6 - i;
+            p = v * (1 - s); q = v * (1 - f * s); t = v * (1 - (1 - f) * s);
+            switch (i % 6) {
+                case 0: r=v; g=t; b=p; break;
+                case 1: r=q; g=v; b=p; break;
+                case 2: r=p; g=v; b=t; break;
+                case 3: r=p; g=q; b=v; break;
+                case 4: r=t; g=p; b=v; break;
+                case 5: r=v; g=p; b=q; break;
+            }
+            return [r, g, b];
+        }
+
+        function updateSimulation(dt) {
+            // 1. Ghost Audio (Simulate Chords)
+            if(Math.random() > 0.95) {
+                // Dim 7th
+                const note = [0, 3, 6, 9][Math.floor(Math.random()*4)];
+                state.chromagram[note] = 1.0;
+            }
+            for(let i=0; i<12; i++) state.chromagram[i] *= 0.94;
+            
+            state.waveform_peak = Math.pow((Math.sin(state.time * 4)+1)/2, 4.0);
+
+            // 2. Snapwave Logic
+            // Fade Trail
+            for(let i=0; i<LED_COUNT*LED_STRIDE; i++) state.leds[i] *= (1.0 - state.decay);
+
+            // Shift
+            shift_leds_up();
+
+            // Oscillation
+            let oscillation = 0;
+            let millis = state.time * 1000;
+            for(let i=0; i<12; i++) {
+                if(state.chromagram[i] > 0.05) {
+                    oscillation += state.chromagram[i] * Math.sin(millis * 0.001 * (1.0 + i*0.5));
+                }
+            }
+            oscillation = Math.tanh(oscillation * 2.0);
+
+            // Map Position
+            let center = LED_COUNT/2;
+            let pos = Math.floor(center + (oscillation * center * 0.9));
+            if(pos < 0) pos = 0; 
+            if(pos >= LED_COUNT) pos = LED_COUNT-1;
+
+            // Draw Head
+            state.hue_pos += 0.002;
+            // Note: We don't need to overdrive color here anymore (e.g. * 3.0) 
+            // because uExposure in the shader handles the HDR gain.
+            // We keep it normalized so the color math stays accurate.
+            let [r,g,b] = hsv_to_rgb(state.hue_pos, 1.0, 1.0); 
+            
+            const idx = pos * LED_STRIDE;
+            state.leds[idx] = r;
+            state.leds[idx+1] = g;
+            state.leds[idx+2] = b;
+            state.leds[idx+3] = 1.0;
+        }
+
+        // --- LOOP ---
+        let lastTime = 0;
+        function animate(t) {
+            requestAnimationFrame(animate);
+            const dt = (t - lastTime) / 1000;
+            lastTime = t;
+            state.time += dt;
+
+            updateSimulation(dt);
+            
+            ledTexture.needsUpdate = true;
+            controls.update();
+            composer.render();
+        }
+
+        // --- UI BINDINGS ---
+        document.getElementById('exposure').addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            uniforms.uExposure.value = val;
+            document.getElementById('val-exposure').innerText = val.toFixed(1);
+        });
+
+        document.getElementById('falloff').addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            uniforms.uFalloff.value = val;
+            document.getElementById('val-falloff').innerText = val.toFixed(1);
+        });
+
+        document.getElementById('spread').addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            uniforms.uSpread.value = val;
+            document.getElementById('val-spread').innerText = val.toFixed(3);
+        });
+
+        document.getElementById('decay').addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            state.decay = val;
+            document.getElementById('val-decay').innerText = val.toFixed(2);
+        });
+
+        window.addEventListener('resize', () => {
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            composer.setSize(window.innerWidth, window.innerHeight);
+            camera.aspect = window.innerWidth/window.innerHeight;
+            camera.updateProjectionMatrix();
+        });
+
+        animate(0);
+    </script>
+</body>
+</html>

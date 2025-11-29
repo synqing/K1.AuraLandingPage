@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <title>K1-Lightwave Founders' Edition | SpectraSynq</title>
+    <meta
+      name="description"
+      content="See your music. K1-Lightwave turns sound into smooth, volumetric light. Join the founding 100."
+    />
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <div class="navbar-logo">SpectraSynq</div>
+      <div class="hamburger">☰</div>
+      <ul class="navbar-menu">
+        <li><a href="#hero">Home</a></li>
+        <li><a href="#what-it-does">How It Works</a></li>
+        <li><a href="#hardware">Inside the Bar</a></li>
+        <li><a href="#vision">Vision</a></li>
+        <li><a href="#fit">Is This For You?</a></li>
+        <li><a href="#allocation" class="nav-cta">Get Access</a></li>
+      </ul>
+    </nav>
+
+    <!-- SLIDE 1: HERO -->
+    <section id="hero" class="hero">
+      <!-- TODO: Add background shader or hero video here -->
+      <p class="eyebrow">Founders' Edition · First 100 Units</p>
+      <h1 class="hero-headline animate-neonGlow">K1-Lightwave — See Your Music</h1>
+      <p class="hero-subhead">
+        A light bar that actually responds to your music—frequency by frequency, on an audio-rate
+        timescale that feels instant.
+      </p>
+      <p class="hero-meta">$249 · Target ship: March 2026 · Audio-rate visual engine</p>
+      <div class="hero-cta-group">
+        <a href="#allocation" class="cta-button">Request Founders' Access</a>
+        <a href="#problem" class="cta-button-secondary">See it in action ↓</a>
+      </div>
+    </section>
+
+    <!-- SLIDE 2: PROBLEM BEAT -->
+    <section id="problem" class="section problem-beat">
+      <p class="problem-text">
+        Every "sound reactive" light you've bought promised to visualize your music. What you got
+        was a $40 rainbow that blinks when it hears bass.
+        <strong>K1 is what you thought you were buying in the first place.</strong>
+      </p>
+    </section>
+
+    <!-- SLIDE 3: WHAT K1 ACTUALLY DOES -->
+    <section id="what-it-does" class="section section-dark">
+      <p class="eyebrow">How It Works</p>
+      <h2>What K1 Actually Does</h2>
+      <p class="body-text">
+        You press play. Within a single audio frame, the bar reacts—not just to loudness, but to the
+        actual frequencies in your track. Bass swells from the center, highs shimmer at the edges,
+        and the light looks like it's floating inside the glass instead of sitting on top.
+      </p>
+      <p class="body-text">
+        Under the hood, a dual edge-lit light guide injects light from both sides into optical-grade
+        acrylic while an ESP32-S3 runs 96-band analysis at 125 Hz to drive those internal waves. You
+        never see individual diodes, just a continuous volume of light that makes your room look
+        like your music sounds.
+      </p>
+      <!-- TODO: Add side-by-side comparison video (K1 vs generic RGB) -->
+    </section>
+
+    <!-- SLIDE 4: NOT ANOTHER RGB BAR -->
+    <section id="differentiator" class="section">
+      <p class="eyebrow">The Difference</p>
+      <h2>Not Another RGB Bar</h2>
+      <p class="body-text">
+        Most "sound reactive" bars just flip between a handful of presets when they hear volume
+        changes—rainbow chases, fake VU meters, everything slightly behind the beat.
+      </p>
+      <p class="subhead">K1 does what they don't:</p>
+      <ul class="brutal-facts">
+        <li><strong>Other bars react to volume. K1 reacts to music.</strong></li>
+        <li><strong>They hear "loud." K1 hears 96 frequencies.</strong></li>
+        <li>
+          <strong
+            >Single-digit-millisecond engine tick means light lands with the beat, not after
+            it.</strong
+          >
+        </li>
+        <li><strong>They ship 18 color modes. K1 ships a physics-inspired engine.</strong></li>
+      </ul>
+      <p class="body-text">
+        And because it drives a light guide instead of bare LEDs, you never see "a strip of
+        dots"—you see light suspended inside the panel, the kind that makes people ask,
+        <em>"Where is that even coming from?"</em>
+      </p>
+    </section>
+
+    <!-- SLIDE 5: INSIDE THE BAR -->
+    <section id="hardware" class="section section-dark">
+      <p class="eyebrow">The Hardware</p>
+      <h2>Inside the Bar</h2>
+      <div class="hardware-specs">
+        <ul>
+          <li>Dual edge-lit light guide plate with 320 addressable RGB LEDs</li>
+          <li>ESP32-S3 running the audio + render loop</li>
+          <li>96-band analysis at 125 Hz</li>
+          <li>Single-digit-millisecond internal engine tick for near-instant response</li>
+          <li>I²S MEMS mic capture (line-in planned for future configs)</li>
+          <li>USB-C power for sane desktop and studio setups</li>
+          <li>
+            Pre-loaded physics-inspired modes, plus firmware you can extend if you want to hack
+          </li>
+        </ul>
+      </div>
+      <!-- TODO: Add product render or exploded-view diagram -->
+    </section>
+
+    <!-- SLIDE 6: K1 IS NODE ONE -->
+    <section id="vision" class="section">
+      <p class="eyebrow">What's Next</p>
+      <h2>K1 Is Node One</h2>
+      <p class="body-text">
+        K1 is the first physical visual instrument in a system we're building for people who want to
+        design audio-reactive light, not just cycle through preset modes.
+      </p>
+      <p class="body-text">
+        Founders get first access—and a real say in what we build next.
+        <strong>You're not buying a finished product. You're buying into a direction.</strong>
+      </p>
+    </section>
+
+    <!-- SLIDE 7: FIT FILTER -->
+    <section id="fit" class="section section-dark">
+      <p class="eyebrow">Before You Sign Up</p>
+      <h2>Read This Before You Drop Your Email</h2>
+      <div class="two-column">
+        <div class="column">
+          <h3>You'll probably love this if:</h3>
+          <ul>
+            <li>You already care about your audio chain and want the visual piece to match.</li>
+            <li>You're okay routing audio or following a clear setup guide.</li>
+            <li>
+              You like being early, giving feedback, and seeing it turn into firmware updates.
+            </li>
+          </ul>
+        </div>
+        <div class="column">
+          <h3>You'll probably hate this if:</h3>
+          <ul>
+            <li>You just want cheap rainbow mood lighting with a polished phone app.</li>
+            <li>You need something guaranteed-perfect for a specific event date.</li>
+            <li>You never want to see a config screen, serial log, or flasher.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- SLIDE 8: ALLOCATION FORM -->
+    <section id="allocation" class="section allocation-section">
+      <p class="eyebrow">Founders' Edition Allocation</p>
+      <h2>Be One of the First 100</h2>
+      <p class="subhead">100 units · $249 USD + shipping · Target ship: March 2026</p>
+      <p class="body-text">
+        We're doing a small Founders' Edition run to get K1-Lightwave into real rooms, gather real
+        feedback, and tune the engine before scaling up. Drop your email to claim a slot. When your
+        allocation opens, we'll send you a private link with final details—no obligation until you
+        decide to order.
+      </p>
+      <form id="allocationForm">
+        <input type="text" name="full_name" placeholder="Full Name" required />
+        <input type="email" name="email" placeholder="Email Address" required />
+        <button type="submit" class="cta-button">Request Founders' Access</button>
+      </form>
+      <p class="microcopy">
+        No spam. No pressure. You'll receive a private link when your slot opens—zero obligation
+        until you decide to place an order.
+      </p>
+    </section>
+
+    <!-- Footer -->
+    <footer id="contact" class="footer">
+      <p>Email: hello@spectrasynq.com</p>
+      <div class="footer-social">
+        <a href="https://twitter.com/spectrasynq" target="_blank">Twitter</a>
+        <a href="https://instagram.com/spectrasynq" target="_blank">Instagram</a>
+        <a href="https://github.com/spectrasynq" target="_blank">GitHub</a>
+      </div>
+      <p>© 2025 SpectraSynq. All rights reserved.</p>
+    </footer>
+
+    <div id="modal" class="modal">
+      <div class="modal-content">
+        <h2>Request Submitted</h2>
+        <p id="modalMessage">
+          Thank you for your interest. We'll reach out when your allocation slot opens.
+        </p>
+        <button onclick="closeModal()" class="cta-button">Close</button>
+      </div>
+    </div>
+
+    <!-- Floating CTA Button -->
+    <a href="#allocation" class="floating-button">Request Access</a>
+    <script src="interaksi.js"></script>
+  </body>
+</html>

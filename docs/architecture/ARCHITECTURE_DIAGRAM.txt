@@ -1,0 +1,347 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                    SHINY CTA BUTTON: COMPLETE ARCHITECTURE                     ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                          VISUAL LAYER HIERARCHY (Z-AXIS)                        │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+    TOP (Most Visible)
+         ▲
+         │     ┌─────────────────────────────────────┐
+         │     │  z-index: 3                         │
+         │     │  <span>Click Me</span>              │ ◄─ READABLE TEXT
+         │     │  (foreground text)                  │
+         │     └─────────────────────────────────────┘
+         │
+         │     ┌─────────────────────────────────────┐
+         │     │  z-index: -1 (relative to span)     │
+         │     │  span::before (Breathing Glow)      │ ◄─ INNER GLOW
+         │     │  • Radial gradient (blue)           │    (behind text)
+         │     │  • Opacity: 0.3→0.8→0.3            │    • 4.5s cycle
+         │     │  • Duration: 4.5s                   │
+         │     └─────────────────────────────────────┘
+         │
+         │     ┌─────────────────────────────────────┐
+         │     │  z-index: 2                         │
+         │     │  ::before (Particle Shimmer)        │ ◄─ SPARKLES
+         │     │  • Radial gradient (white dot)      │    (0.5px particles)
+         │     │  • Conic mask (40° rotating wedge) │    • 2.5s cycle
+         │     │  • Rotates with border              │
+         │     └─────────────────────────────────────┘
+         │
+         │     ┌─────────────────────────────────────┐
+         │     │  z-index: 2                         │
+         │     │  ::after (Directional Shimmer)      │ ◄─ DIAGONAL BEAM
+         │     │  • Linear gradient (-50° angle)     │    (external light)
+         │     │  • Radial mask (cone shape)         │    • 4.0s cycle
+         │     │  • translate(-100%→+100%)           │
+         │     └─────────────────────────────────────┘
+         │
+         │     ┌─────────────────────────────────────┐
+         │     │  z-index: 1 (implicit)              │
+         │     │  Button Interior                    │ ◄─ BLACK BACKGROUND
+         │     │  • linear-gradient (black)          │    (padding-box)
+         │     │  • Solid opaque background          │
+         │     └─────────────────────────────────────┘
+         │
+         │     ┌─────────────────────────────────────┐
+         │     │  z-index: 0 (implicit)              │
+         │     │  Button Border                      │ ◄─ ROTATING LIGHT
+         │     │  • conic-gradient (blue, 40° wedge) │    (border-box)
+         │     │  • Rotates 360° every 2.5s         │    • 2.5s cycle
+         │     └─────────────────────────────────────┘
+         │
+    BOTTOM (Least Visible)
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                          ANIMATION TIMELINE SYNCHRONIZATION                     │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+BORDER-SPIN ANIMATION (2.5s cycle):
+┌─────────────┬─────────────┬─────────────┬─────────────┬─────────────┐
+│   0.0s      │   0.625s    │   1.25s     │   1.875s    │   2.5s      │
+│   (0°)      │   (90°)     │   (180°)    │   (270°)    │   (360°→0°) │
+│  TOP        │   RIGHT     │   BOTTOM    │   LEFT      │   TOP       │
+├─────────────┴─────────────┴─────────────┴─────────────┴─────────────┤
+│  Rotates light beam around button perimeter (primary visual effect)  │
+└─────────────┬─────────────┬─────────────┬─────────────┬─────────────┘
+
+PARTICLE SHIMMER (2.5s cycle, synchronized with border):
+┌─────────────┬─────────────┬─────────────┬─────────────┬─────────────┐
+│   0.0s      │   0.625s    │   1.25s     │   1.875s    │   2.5s      │
+│  VISIBLE    │  HIDDEN     │  HIDDEN     │  VISIBLE    │  VISIBLE    │
+├─────────────┴─────────────┴─────────────┴─────────────┴─────────────┤
+│  Sparkles twinkle in sync with rotating border light (fine detail)   │
+└─────────────┬─────────────┬─────────────┬─────────────┬─────────────┘
+
+DIRECTIONAL SHIMMER (4.0s cycle, independent):
+┌─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┐
+│  0.0s   │  0.5s   │  1.0s   │  1.5s   │  2.0s   │  2.5s   │  3.0s   │  4.0s   │
+│ ENTERING│ENTERING │ MIDDLE  │ MIDDLE  │ EXITING │ EXITING │ EXITING │ RESET   │
+├─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┴─────────┤
+│  Diagonal beam sweeps top-left to bottom-right (depth effect)                  │
+└─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┬─────────┘
+
+BREATHING GLOW (4.5s cycle, independent):
+┌────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┐
+│ 0.0s   │ 0.56s  │ 1.125s │ 1.69s  │ 2.25s  │ 2.81s  │ 3.38s  │ 3.94s  │ 4.5s   │
+│ 0.3    │ 0.4    │ 0.55   │ 0.7    │ 0.8    │ 0.7    │ 0.55   │ 0.4    │ 0.3    │
+│ (dim)  │        │        │        │ (peak) │        │        │        │ (dim)  │
+├────────┴────────┴────────┴────────┴────────┴────────┴────────┴────────┴────────┤
+│  Inner glow pulses like breathing (energy effect)                              │
+└────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┬────────┘
+
+INTERFERENCE PATTERN (LCM = 10.0s):
+┌─────────────────────────────────────────────────────────────────────────────┐
+│  At t=0.0s:  B=0°,    S=-100%, Br=0.3  (unique combination 1)              │
+│  At t=1.0s:  B=144°,  S=-50%,   Br=0.5 (unique combination 2)              │
+│  At t=2.5s:  B=0°,    S=+25%,   Br=0.6 (unique combination 3)              │
+│  At t=4.0s:  B=252°,  S=-100%,  Br=0.3 (unique combination 4)              │
+│  At t=5.0s:  B=0°,    S=+50%,   Br=0.5 (unique combination 5)              │
+│  At t=7.5s:  B=0°,    S=-50%,   Br=0.6 (unique combination 6)              │
+│  At t=10.0s: B=0°,    S=-100%,  Br=0.3 (FULL SYNCHRONIZATION - RESTART)   │
+│                                                                              │
+│  Legend: B=Border-Spin angle, S=Shimmer position, Br=Breathing opacity     │
+│                                                                              │
+│  Result: Every moment before 10s looks unique. User perceives continuous    │
+│  novelty rather than repetitive pattern. Premium animation effect!          │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              CSS PROPERTY FLOW                                   │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+@property declarations
+        │
+        ├─→ --gradient-angle (0° → 360°, animated)
+        │   └─→ Used by: conic-gradient (border light rotation)
+        │       └─→ Powers: border animation + particle mask
+        │
+        ├─→ --gradient-angle-offset (static, customizable)
+        │   └─→ Controls: starting point offset in conic-gradient
+        │
+        ├─→ --position (static, default 50%)
+        │   └─→ Controls: particle center position
+        │
+        └─→ --gradient-shine (static, blue color)
+            └─→ Controls: peak brightness color in conic-gradient
+
+
+.shiny-cta ANIMATION TRIGGERS
+        │
+        ├─→ @keyframes border-spin (2.5s infinite)
+        │   └─→ Updates --gradient-angle (0° → 360°)
+        │       └─→ Rotates conic-gradient border
+        │       └─→ Rotates particle mask
+        │
+        ├─→ .shiny-cta::after @keyframes shimmer (4.0s infinite)
+        │   └─→ Translates pseudo-element (-100%, -100%) → (100%, 100%)
+        │       └─→ Diagonal sweep of linear gradient
+        │
+        └─→ .shiny-cta span::before @keyframes breathe (4.5s infinite)
+            └─→ Oscillates opacity (0.3 → 0.8 → 0.3)
+                └─→ Pulses inner glow
+
+
+GRADIENT MECHANICS
+        │
+        ├─→ LAYER 1: linear-gradient(#000, #000) padding-box
+        │   └─→ Creates opaque black interior
+        │       └─→ Hides anything beneath
+        │
+        ├─→ LAYER 2: conic-gradient(...) border-box
+        │   └─→ Creates rotating blue light
+        │       └─→ Visible ONLY in border area (2px)
+        │
+        ├─→ PARTICLE: radial-gradient(white 0.5px, transparent)
+        │   └─→ Creates tiny white dot (0.5px)
+        │       └─→ Masked by conic-gradient (rotating wedge)
+        │
+        ├─→ SHIMMER: linear-gradient(-50deg, ...)
+        │   └─→ Creates diagonal stripe
+        │       └─→ Masked by radial-gradient (cone shape)
+        │
+        └─→ GLOW: radial-gradient(ellipse, blue, transparent)
+            └─→ Creates soft blue halo
+                └─→ Behind text, pulsing opacity
+
+
+MASK-IMAGE CONTROL
+        │
+        ├─→ ::before mask: conic-gradient (rotating spotlight)
+        │   ├─→ 0°-10°: BLACK (visible)
+        │   ├─→ 10°-90°: TRANSPARENT (hidden)
+        │   └─→ 90°-360°: BLACK (visible again)
+        │   └─→ Result: 40° visible wedge rotates with border
+        │
+        └─→ ::after mask: radial-gradient (cone shape)
+            ├─→ 0%-40% radius: TRANSPARENT (hide top)
+            └─→ 40%-100% radius: BLACK (show bottom)
+            └─→ Result: Only bottom 60% of shimmer visible (cone effect)
+
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                            COMPONENT INTERACTIONS                               │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+                   BORDER LIGHT (2.5s cycle)
+                           │
+                           ├─→ Attracts primary attention
+                           ├─→ Communicates button interactivity
+                           ├─→ Drives --gradient-angle variable
+                           │
+                           ├─→ Powers PARTICLE SHIMMER
+                           │   ├─→ Uses same --gradient-angle
+                           │   ├─→ Adds +45deg offset to mask
+                           │   └─→ Creates synchronized sparkles
+                           │
+                           └─→ Powers INTERNAL COLOR
+                               └─→ Uses same blue color (#1d4ed8)
+                                   └─→ Unifies visual theme
+
+
+                 SHIMMER BEAM (4.0s cycle, independent)
+                           │
+                           ├─→ Adds dimensional depth
+                           ├─→ Simulates external light source
+                           ├─→ Different timing (4.0s ≠ 2.5s)
+                           │   └─→ Prevents synchronized repetition
+                           │
+                           └─→ Works with: conic border + particle shimmer
+                               └─→ Three simultaneous effects create
+                                   complex, premium animation
+
+
+                   INNER GLOW (4.5s cycle, independent)
+                           │
+                           ├─→ Suggests internal energy
+                           ├─→ Humanizes the button (like breathing)
+                           ├─→ Slowest cycle (4.5s longest duration)
+                           │   └─→ Adds subtle background energy
+                           │
+                           └─→ Behind text (z-index: -1)
+                               └─→ Maintains text readability
+                               └─→ Creates depth illusion
+
+
+                        UNIFIED SYSTEM
+                           │
+                           └─→ Four layers + three different timings
+                               ├─→ Creates LCM = 10.0 second pattern
+                               ├─→ Every moment unique before reset
+                               ├─→ Prevents eye adaptation
+                               ├─→ Maintains engagement
+                               └─→ Feels premium and intelligent
+
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                            KEY TECHNICAL DECISIONS                              │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+DECISION 1: Three Different Animation Durations
+  2.5s (border) : 4.0s (shimmer) : 4.5s (glow)
+  └─→ Creates interference pattern (LCM = 10.0s)
+      └─→ Prevents perceived repetition for first 10 seconds
+          └─→ User resets attention before pattern repeats
+              └─→ Feels continuously novel and engaging
+
+DECISION 2: Use Masks Instead of Alternatives
+  ✓ mask-image (pixel-perfect visibility)
+  ✗ overflow (can't create cone shapes)
+  ✗ opacity (fades entire element)
+  ✗ display (all-or-nothing visibility)
+  └─→ Masks enable sophisticated visibility control
+      └─→ Conic mask rotates with border
+      └─→ Radial mask creates cone shape
+
+DECISION 3: Dual-Layer Background
+  Layer 1 (padding-box):  black interior
+  Layer 2 (border-box):   animated gradient border
+  └─→ Keeps animation localized to 2px border area
+      └─→ Prevents gradient from overwhelming interior
+          └─→ Maintains button readability
+
+DECISION 4: Transform: translate() for Animation
+  ✓ transform (GPU-accelerated, 60fps)
+  ✗ top/left (CPU-intensive, drops frames)
+  └─→ GPU acceleration ensures smooth performance
+      └─→ Works well on mobile devices
+          └─→ Minimal battery impact
+
+DECISION 5: Linear Timing Function
+  ✓ linear (constant speed, no easing)
+  ✗ ease (variable speed, more CPU)
+  └─→ Constant rotation feels mechanical and precise
+      └─→ No easing in/out prevents pause perception
+          └─→ Continuous motion feels active
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                              PSYCHOLOGY & UX                                     │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+VISUAL HIERARCHY:
+  Primary:   Border light (fast, eye-catching)
+  Secondary: Particle sparkles (fine details, texture)
+  Tertiary:  Diagonal shimmer (depth, dimension)
+  Quaternary: Breathing glow (subtle energy)
+
+ENGAGEMENT STRATEGY:
+  1. Attract attention:     Fast rotating border light
+  2. Reward inspection:     Tiny sparkles visible on close look
+  3. Suggest dimension:     Diagonal beam from external source
+  4. Imply aliveness:       Breathing pulse suggests energy
+
+EMOTIONAL IMPACT:
+  "This button is sophisticated"  ← Complex animation system
+  "This button is important"      ← Premium aesthetic
+  "I should click this"           ← Motion triggers action impulse
+  "This is high quality"          ← Multiple synchronized effects
+
+RETENTION:
+  Non-repetitive pattern keeps users engaged
+  Pattern resets every 10 seconds (before human attention resets)
+  Users never quite predict what's coming next
+  Creates sense of "intelligence" and "aliveness"
+
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                         BROWSER RENDERING PIPELINE                              │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+1. PARSE (@property declarations)
+   └─→ Register --gradient-angle as <angle> type
+       └─→ Enable smooth interpolation engine
+
+2. CALCULATE (Animation engine)
+   └─→ Compute frame-by-frame values:
+       ├─→ border-spin: --gradient-angle progresses 0° → 360°
+       ├─→ shimmer: transform translates (-100%, -100%) → (100%, 100%)
+       └─→ breathe: opacity oscillates 0.3 → 0.8 → 0.3
+
+3. APPLY (CSS engine)
+   ├─→ Update gradient starting points (conic-gradient)
+   ├─→ Update mask visibility (conic-gradient mask)
+   ├─→ Update element position (transform: translate)
+   └─→ Update element opacity
+
+4. RENDER (GPU acceleration)
+   ├─→ GPU renders rotated gradient (border-box)
+   ├─→ GPU renders masked sparkles (visibility calculation)
+   ├─→ GPU renders translated pseudo-element (directional shimmer)
+   └─→ GPU adjusts opacity (breathing glow)
+
+5. COMPOSITE (Final output)
+   └─→ Stack all 4 layers with z-index values
+       └─→ Display to user as single button
+
+Result: 60 FPS animation with minimal CPU overhead
+        GPU-accelerated rendering = smooth motion
+        Linear timing = predictable CPU load
+
+
+This complete architecture creates a sophisticated,
+engaging, premium button effect through layered CSS animations
+combined with CSS Houdini properties and mask-image visibility control.
+
+═══════════════════════════════════════════════════════════════════════════════════

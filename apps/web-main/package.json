@@ -1,0 +1,53 @@
+{
+  "name": "k1-landingpage-aura",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "@paper-design/shaders": "^0.0.65",
+    "@paper-design/shaders-react": "^0.0.65",
+    "@react-three/drei": "^9.122.0",
+    "@react-three/fiber": "^8.18.0",
+    "@react-three/postprocessing": "^2.16.3",
+    "@types/three": "^0.160.0",
+    "leva": "^0.10.1",
+    "next": "14.2.4",
+    "postprocessing": "^6.38.0",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "three": "^0.160.0",
+    "uuid": "^13.0.0",
+    "zustand": "^5.0.8"
+  },
+  "devDependencies": {
+    "@types/node": "20.11.30",
+    "@types/react": "18.2.79",
+    "@typescript-eslint/eslint-plugin": "^8.48.0",
+    "@typescript-eslint/parser": "^8.48.0",
+    "autoprefixer": "10.4.19",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^16.0.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.4",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
+    "postcss": "8.4.38",
+    "prettier": "^3.7.2",
+    "tailwindcss": "3.4.11",
+    "typescript": "5.4.5"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx}": [
+      "prettier --write"
+    ],
+    "*.{json,css,md}": [
+      "prettier --write"
+    ]
+  }
+}
