@@ -5,15 +5,22 @@ import * as THREE from 'three';
 const LED_COUNT = 160;
 const LED_STRIDE = 4; // RGBA
 
+export type DiagnosticMode = 'NONE' | 'TOP_ONLY' | 'BOTTOM_ONLY' | 'COLLISION';
+
 interface PhysicsParams {
   simulationSpeed: number;
   decay: number;
   ghostAudio: boolean;
   motionMode: string;
+  diagnosticMode: DiagnosticMode;
 }
 
+/**
+ * Core Physics Kernel for the K1 Lightwave.
+ * Simulates dual-channel LED buffers with independent signal processing and fluid dynamics.
+ */
 export function useK1Physics(params: PhysicsParams) {
-  // IMPERATIVE TEXTURE MANAGEMENT
+  // --- TEXTURE MANAGEMENT (IMPERATIVE) ---
   const texBottom = useMemo(() => {
     const data = new Float32Array(LED_COUNT * 4);
     const t = new THREE.DataTexture(data, LED_COUNT, 1, THREE.RGBAFormat, THREE.FloatType);
@@ -32,8 +39,8 @@ export function useK1Physics(params: PhysicsParams) {
     return t;
   }, []);
 
-  // STATE CONTAINERS
-  // We avoid React state for the physics loop to ensure 120Hz performance without garbage collection
+  // --- STATE CONTAINERS ---
+  // Mutable state for 120Hz loop to avoid Garbage Collection
   const physicsState = useRef({
     bottom: {
       leds: new Float32Array(LED_COUNT * LED_STRIDE),
@@ -41,48 +48,12 @@ export function useK1Physics(params: PhysicsParams) {
     },
     top: {
       leds: new Float32Array(LED_COUNT * LED_STRIDE),
-      huePos: 0.5, // Start with different color
+      huePos: 0.5,
     },
-    chromagram: new Float32Array(12),
     time: 0,
   });
 
-  // --- PHYSICS HELPERS ---
-  const shiftLeds = (
-    leds: Float32Array,
-    mode: string,
-    direction: 'normal' | 'reverse' = 'normal'
-  ) => {
-    const center = LED_COUNT / 2;
-
-    // Determine actual flow direction based on mode and specific edge direction override
-    // For K1: Top might flow L->R, Bottom R->L
-
-    if (mode === 'Center Origin') {
-      // Shift Outwards from Center
-      // Right side (Center -> End)
-      for (let i = LED_COUNT - 1; i > center; i--) {
-        copyPixel(leds, i, i - 1);
-      }
-      // Left side (Center -> Start)
-      for (let i = 0; i < center; i++) {
-        copyPixel(leds, i, i + 1);
-      }
-    } else {
-      // Linear flow
-      if (direction === 'normal') {
-        // Left to Right (0 -> 160)
-        for (let i = LED_COUNT - 1; i > 0; i--) {
-          copyPixel(leds, i, i - 1);
-        }
-      } else {
-        // Right to Left (160 -> 0)
-        for (let i = 0; i < LED_COUNT - 1; i++) {
-          copyPixel(leds, i, i + 1);
-        }
-      }
-    }
-  };
+  // --- HELPERS ---
 
   const copyPixel = (buffer: Float32Array, destIdx: number, srcIdx: number) => {
     const d = destIdx * LED_STRIDE;
@@ -91,6 +62,26 @@ export function useK1Physics(params: PhysicsParams) {
     buffer[d + 1] = buffer[s + 1];
     buffer[d + 2] = buffer[s + 2];
     buffer[d + 3] = buffer[s + 3];
+  };
+
+  // Shift pixels based on motion mode
+  const shiftLeds = (leds: Float32Array, mode: string, direction: 'normal' | 'reverse') => {
+    const center = LED_COUNT / 2;
+
+    if (mode === 'Center Origin') {
+      // Shift Outwards
+      for (let i = LED_COUNT - 1; i > center; i--) copyPixel(leds, i, i - 1);
+      for (let i = 0; i < center; i++) copyPixel(leds, i, i + 1);
+    } else {
+      // Linear Flow
+      if (direction === 'normal') {
+        // L -> R
+        for (let i = LED_COUNT - 1; i > 0; i--) copyPixel(leds, i, i - 1);
+      } else {
+        // R -> L
+        for (let i = 0; i < LED_COUNT - 1; i++) copyPixel(leds, i, i + 1);
+      }
+    }
   };
 
   const hsvToRgb = (h: number, s: number, v: number) => {
@@ -150,109 +141,96 @@ export function useK1Physics(params: PhysicsParams) {
   ) => {
     if (idx < 0 || idx >= LED_COUNT) return;
     const i = idx * LED_STRIDE;
-    // Additive mixing with clamping
     leds[i] = Math.min(2.0, leds[i] + r * intensity);
     leds[i + 1] = Math.min(2.0, leds[i + 1] + g * intensity);
     leds[i + 2] = Math.min(2.0, leds[i + 2] + b * intensity);
-    leds[i + 3] = 1.0; // Alpha channel (unused for now, but good for structure)
+    leds[i + 3] = 1.0;
   };
 
   // --- RENDER LOOP ---
   useFrame((_state, delta) => {
     const dt = delta * params.simulationSpeed;
     const s = physicsState.current;
-
     s.time += dt;
 
-    // --- 1. SIGNAL PROCESSING (Dual-Channel Ghost Audio) ---
-    let triggerBottom = false;
-    let triggerTop = false;
-    let noteIndex = 0;
+    // --- 1. DETERMINISTIC SIGNAL GENERATION ---
+    // Replace random ghostAudio with multi-frequency oscillators
+    // Bottom (Transient): Fast, punchy sine wave (2Hz) + Pulse
+    // Top (Sustained): Slow, rolling sine wave (0.2Hz)
 
-    if (params.ghostAudio) {
-      const rand = Math.random();
-      // Rare, strong transients -> Bottom Edge (Percussive)
-      if (rand > 0.96) {
-        triggerBottom = true;
-        noteIndex = [0, 7, 0, 7][Math.floor(Math.random() * 4)]; // Root/Fifth
-      }
-      // Frequent, softer pulses -> Top Edge (Harmonic/Atmosphere)
-      if (rand > 0.92) {
-        triggerTop = true;
-        noteIndex = [2, 4, 5, 9, 11][Math.floor(Math.random() * 5)]; // Extensions
+    const t = s.time;
+    let bottomTrigger = 0;
+    let topTrigger = 0;
+
+    if (params.ghostAudio && params.diagnosticMode === 'NONE') {
+      // Bottom: Mimic kick drum / transient
+      // Sharp pulse every 0.5s
+      const beat = (t * 2.0) % 1.0;
+      if (beat < 0.1) bottomTrigger = 1.0;
+
+      // Top: Mimic pad / atmosphere
+      // Slow undulation
+      topTrigger = (Math.sin(t * 0.5) + 1.0) * 0.5; // 0 to 1
+    }
+
+    // --- 2. DIAGNOSTIC OVERRIDE ---
+    if (params.diagnosticMode !== 'NONE') {
+      bottomTrigger = 0;
+      topTrigger = 0;
+
+      // Fixed patterns for inspection
+      const center = Math.floor(LED_COUNT / 2);
+
+      if (params.diagnosticMode === 'TOP_ONLY' || params.diagnosticMode === 'COLLISION') {
+        // Inject into Top
+        // Static bright lobes at 25%, 50%, 75%
+        addColor(s.top.leds, Math.floor(LED_COUNT * 0.25), 1, 1, 1, 0.5);
+        addColor(s.top.leds, center, 1, 1, 1, 0.5);
+        addColor(s.top.leds, Math.floor(LED_COUNT * 0.75), 1, 1, 1, 0.5);
       }
 
-      if (triggerBottom || triggerTop) {
-        s.chromagram[noteIndex] = 1.0;
+      if (params.diagnosticMode === 'BOTTOM_ONLY' || params.diagnosticMode === 'COLLISION') {
+        // Inject into Bottom
+        addColor(s.bottom.leds, Math.floor(LED_COUNT * 0.25), 1, 1, 1, 0.5);
+        addColor(s.bottom.leds, center, 1, 1, 1, 0.5);
+        addColor(s.bottom.leds, Math.floor(LED_COUNT * 0.75), 1, 1, 1, 0.5);
       }
     }
 
-    // Decay Chromagram
-    for (let i = 0; i < 12; i++) s.chromagram[i] *= 0.92;
+    // --- 3. PHYSICS UPDATE (Dual Channel) ---
 
-    // --- 2. PHYSICS UPDATE (Independent Edges) ---
-
-    // -- BOTTOM EDGE (Percussive, Fast, Punchy) --
-    const bottomDecay = params.decay; // Standard decay
-    for (let i = 0; i < LED_COUNT * LED_STRIDE; i++) {
-      s.bottom.leds[i] *= 1.0 - bottomDecay;
-    }
-
-    // Bottom flows "Normal" (L->R or Center Out)
+    // -- BOTTOM CHANNEL (Transient) --
+    // Fast decay
+    const bottomDecay = params.decay * 1.2;
+    for (let i = 0; i < LED_COUNT * LED_STRIDE; i++) s.bottom.leds[i] *= 1.0 - bottomDecay;
     shiftLeds(s.bottom.leds, params.motionMode, 'normal');
 
-    // -- TOP EDGE (Atmospheric, Slow, Washy) --
-    const topDecay = params.decay * 0.6; // Slower decay
-    for (let i = 0; i < LED_COUNT * LED_STRIDE; i++) {
-      s.top.leds[i] *= 1.0 - topDecay;
-    }
+    // -- TOP CHANNEL (Sustained) --
+    // Slow decay
+    const topDecay = params.decay * 0.5;
+    for (let i = 0; i < LED_COUNT * LED_STRIDE; i++) s.top.leds[i] *= 1.0 - topDecay;
+    shiftLeds(s.top.leds, params.motionMode, 'reverse'); // Counter-flow for collisions
 
-    // Top flows "Reverse" (R->L or Center Out) to create collisions
-    shiftLeds(s.top.leds, params.motionMode, 'reverse');
-
-    // --- 3. COLOR INJECTION ---
-
-    // Evolve hues independently
+    // --- 4. INJECTION ---
     s.bottom.huePos += 0.002 * params.simulationSpeed;
-    s.top.huePos += 0.001 * params.simulationSpeed; // Slower hue shift on top
+    s.top.huePos += 0.001 * params.simulationSpeed;
 
-    const colBottom = hsvToRgb(s.bottom.huePos, 1.0, 1.0);
-    const colTop = hsvToRgb(s.top.huePos, 0.8, 0.8); // Slightly desaturated top
+    const colB = hsvToRgb(s.bottom.huePos, 1.0, 1.0);
+    const colT = hsvToRgb(s.top.huePos, 0.8, 0.8);
 
-    const center = LED_COUNT / 2;
-
-    // Injection Logic
-    if (triggerBottom) {
-      // Sharp injection for bottom
-      let pos = 0;
-      if (params.motionMode === 'Center Origin') pos = center;
-      else if (params.motionMode === 'Left Origin') pos = 0;
-      else pos = LED_COUNT - 1;
-
-      // Inject with high intensity
-      addColor(s.bottom.leds, pos, colBottom.r, colBottom.g, colBottom.b, 1.5);
-      // Spread slightly
-      addColor(s.bottom.leds, pos + 1, colBottom.r, colBottom.g, colBottom.b, 0.8);
-      addColor(s.bottom.leds, pos - 1, colBottom.r, colBottom.g, colBottom.b, 0.8);
+    if (bottomTrigger > 0) {
+      const pos = params.motionMode === 'Center Origin' ? LED_COUNT / 2 : 0;
+      // Punchy injection
+      addColor(s.bottom.leds, pos, colB.r, colB.g, colB.b, bottomTrigger * 2.0);
     }
 
-    if (triggerTop) {
-      // Softer injection for top
-      let pos = 0;
-      if (params.motionMode === 'Center Origin') pos = center;
-      else if (params.motionMode === 'Left Origin')
-        pos = LED_COUNT - 1; // Opposite origin for collision
-      else pos = 0;
-
-      // Inject with lower intensity but wider area
-      addColor(s.top.leds, pos, colTop.r, colTop.g, colTop.b, 0.8);
-      addColor(s.top.leds, pos + 1, colTop.r, colTop.g, colTop.b, 0.6);
-      addColor(s.top.leds, pos - 1, colTop.r, colTop.g, colTop.b, 0.6);
-      addColor(s.top.leds, pos + 2, colTop.r, colTop.g, colTop.b, 0.4);
-      addColor(s.top.leds, pos - 2, colTop.r, colTop.g, colTop.b, 0.4);
+    if (topTrigger > 0) {
+      const pos = params.motionMode === 'Center Origin' ? LED_COUNT / 2 : LED_COUNT - 1;
+      // Soft injection (accumulates due to slow decay)
+      addColor(s.top.leds, pos, colT.r, colT.g, colT.b, topTrigger * 0.1);
     }
 
-    // --- 4. UPLOAD TEXTURES ---
+    // --- 5. TEXTURE UPLOAD ---
     texBottom.image.data.set(s.bottom.leds);
     texBottom.needsUpdate = true;
 

@@ -3,10 +3,11 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
 import { useControls, folder } from 'leva';
-import { useK1Physics } from './useK1Physics';
+import { useK1Physics, DiagnosticMode } from './useK1Physics';
 import { useLayerManager } from './LayerManager';
 import { VisualLayer } from './components/VisualLayer';
 import { Compositor } from './components/Compositor';
+import { DebugOverlay } from './components/Debug/DebugOverlay';
 import { edgeLitShader } from './shaders/edge-lit';
 
 export const K1Engine: React.FC = () => {
@@ -28,6 +29,13 @@ export const K1Engine: React.FC = () => {
       decay: { value: 0.15, min: 0.01, max: 0.5 },
       ghostAudio: { value: true },
     }),
+    Diagnostics: folder({
+      diagnosticMode: {
+        options: ['NONE', 'TOP_ONLY', 'BOTTOM_ONLY', 'COLLISION'],
+        value: 'NONE',
+      },
+      showDebugOverlay: { value: false },
+    }),
   });
 
   // --- PHYSICS KERNEL ---
@@ -36,7 +44,7 @@ export const K1Engine: React.FC = () => {
     decay: params.decay,
     ghostAudio: params.ghostAudio,
     motionMode: params.motionMode,
-    temporalOffset: 0, // Deprecated
+    diagnosticMode: params.diagnosticMode as DiagnosticMode,
   });
 
   // --- LAYER MANAGEMENT ---
@@ -96,6 +104,12 @@ export const K1Engine: React.FC = () => {
 
       {/* Composite them to the screen */}
       <Compositor />
+
+      {/* Diagnostics */}
+      {/* @ts-expect-error Leva types are loose, but this is a boolean at runtime */}
+      {params.showDebugOverlay && (
+        <DebugOverlay texTop={texTop} texBottom={texBottom} ledCount={ledCount} />
+      )}
     </>
   );
 };
