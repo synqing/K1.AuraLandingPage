@@ -19,14 +19,11 @@ export const K1Engine: React.FC = () => {
       baseLevel: { value: 0.0, min: 0.0, max: 1.0 },
       tint: { value: '#ffffff' },
     }),
-    Sequencing: folder({
-      temporalOffset: { value: 120, min: 0, max: 500, label: 'Offset (ms)' },
+    Physics: folder({
       motionMode: {
         options: ['Center Origin', 'Left Origin', 'Right Origin'],
         value: 'Center Origin',
       },
-    }),
-    Simulation: folder({
       simulationSpeed: { value: 1.0, min: 0.1, max: 5.0 },
       decay: { value: 0.15, min: 0.01, max: 0.5 },
       ghostAudio: { value: true },
@@ -38,8 +35,8 @@ export const K1Engine: React.FC = () => {
     simulationSpeed: params.simulationSpeed,
     decay: params.decay,
     ghostAudio: params.ghostAudio,
-    temporalOffset: params.temporalOffset,
     motionMode: params.motionMode,
+    temporalOffset: 0, // Deprecated
   });
 
   // --- LAYER MANAGEMENT ---

@@ -18,32 +18,46 @@ export const edgeLitShader = {
     ${commonShaderPartials.sampleStrip}
 
     void main() {
-      // 1. Vertical Gradients (Dual Edge-Lit)
-      // Bottom Light fades as it goes Up (y -> 1)
+      // --- 1. VERTICAL ATTENUATION (Physical Distance) ---
+      // Light decays as it travels through the plate
       float bottomInfluence = pow(1.0 - vUv.y, uFalloff);
-
-      // Top Light fades as it goes Down (y -> 0)
       float topInfluence = pow(vUv.y, uFalloff);
 
-      // 2. Dynamic Scattering (Blur width increases away from source)
-      float bottomSpread = uSpread * (0.2 + vUv.y * 3.0);
-      float topSpread = uSpread * (0.2 + (1.0 - vUv.y) * 3.0);
+      // --- 2. LATERAL DIFFUSION (Optical Scattering) ---
+      // Top: "Ribs" -> Sharp near source, blurs quickly
+      float topSpread = uSpread * (0.1 + (1.0 - vUv.y) * 2.0);
+      
+      // Bottom: "Footlights" -> Broader, softer domes
+      float bottomSpread = uSpread * (0.3 + vUv.y * 4.0);
 
-      // 3. Sample both textures
+      // --- 3. SAMPLE LED BUFFERS ---
+      // We use different spread values to create the distinct "Top Ribs" vs "Bottom Domes" look
       vec3 colorBottom = sampleStrip(uLedStateBottom, vUv, bottomSpread, uResolution);
       vec3 colorTop = sampleStrip(uLedStateTop, vUv, topSpread, uResolution);
 
-      // 4. Additive Blending
-      vec3 finalColor = (colorBottom * bottomInfluence) + (colorTop * topInfluence);
+      // --- 4. MID-PLATE COLUMNS ("Waterfalls") ---
+      // Constructive interference where both top and bottom are active at the same X
+      // This simulates the "volumetric column" effect
+      vec3 interaction = colorBottom * colorTop;
+      float interactionStrength = length(interaction);
+      // Boost columns in the middle of the plate
+      float midPlateMask = smoothstep(0.2, 0.5, vUv.y) * smoothstep(0.8, 0.5, vUv.y);
+      vec3 columnBoost = interaction * midPlateMask * 4.0; // Arbitrary boost factor
 
-      // 5. Edge Hotspots (Physical LED Visibility)
-      float bottomHotspot = smoothstep(0.02, 0.0, vUv.y);
-      float topHotspot = smoothstep(0.98, 1.0, vUv.y);
-      float totalHotspot = (bottomHotspot * length(colorBottom)) + (topHotspot * length(colorTop));
+      // --- 5. EDGE HOTSPOTS (Mechanical Cutouts) ---
+      // Boost brightness at the very edges of the unit
+      float edgeMask = smoothstep(0.02, 0.0, vUv.x) + smoothstep(0.98, 1.0, vUv.x);
+      vec3 hotspotBoost = (colorBottom + colorTop) * edgeMask * 2.0;
 
-      // 6. Final Mix
+      // --- 6. COMPOSITION ---
+      vec3 finalColor = (colorBottom * bottomInfluence) + 
+                        (colorTop * topInfluence) + 
+                        columnBoost +
+                        hotspotBoost;
+
+      // --- 7. TONEMAPPING & OUTPUT ---
       vec3 outColor = finalColor + uBaseLevel;
-      outColor = outColor * uExposure + (vec3(1.0) * totalHotspot * 4.0);
+      outColor = outColor * uExposure;
       outColor *= uTint;
 
       gl_FragColor = vec4(outColor, 1.0);
