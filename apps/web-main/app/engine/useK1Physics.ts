@@ -178,20 +178,21 @@ export function useK1Physics(params: PhysicsParams) {
       topTrigger = 0;
 
       // Fixed patterns for inspection
+      // Use absolute indices to avoid motionMode mirroring logic interference
       const center = Math.floor(LED_COUNT / 2);
 
       if (params.diagnosticMode === 'TOP_ONLY' || params.diagnosticMode === 'COLLISION') {
         // Inject into Top
         // Static bright lobes at 25%, 50%, 75%
         addColor(s.top.leds, Math.floor(LED_COUNT * 0.25), 1, 1, 1, 0.5);
-        addColor(s.top.leds, center, 1, 1, 1, 0.5);
+        addColor(s.top.leds, center, 1, 1, 1, 0.5); // True center
         addColor(s.top.leds, Math.floor(LED_COUNT * 0.75), 1, 1, 1, 0.5);
       }
 
       if (params.diagnosticMode === 'BOTTOM_ONLY' || params.diagnosticMode === 'COLLISION') {
         // Inject into Bottom
         addColor(s.bottom.leds, Math.floor(LED_COUNT * 0.25), 1, 1, 1, 0.5);
-        addColor(s.bottom.leds, center, 1, 1, 1, 0.5);
+        addColor(s.bottom.leds, center, 1, 1, 1, 0.5); // True center
         addColor(s.bottom.leds, Math.floor(LED_COUNT * 0.75), 1, 1, 1, 0.5);
       }
     }
@@ -202,13 +203,21 @@ export function useK1Physics(params: PhysicsParams) {
     // Fast decay
     const bottomDecay = params.decay * 1.2;
     for (let i = 0; i < LED_COUNT * LED_STRIDE; i++) s.bottom.leds[i] *= 1.0 - bottomDecay;
-    shiftLeds(s.bottom.leds, params.motionMode, 'normal');
+
+    // Disable shift/mirroring during diagnostics to keep patterns static and clean
+    if (params.diagnosticMode === 'NONE') {
+      shiftLeds(s.bottom.leds, params.motionMode, 'normal');
+    }
 
     // -- TOP CHANNEL (Sustained) --
     // Slow decay
     const topDecay = params.decay * 0.5;
     for (let i = 0; i < LED_COUNT * LED_STRIDE; i++) s.top.leds[i] *= 1.0 - topDecay;
-    shiftLeds(s.top.leds, params.motionMode, 'reverse'); // Counter-flow for collisions
+
+    // Disable shift/mirroring during diagnostics
+    if (params.diagnosticMode === 'NONE') {
+      shiftLeds(s.top.leds, params.motionMode, 'reverse');
+    }
 
     // --- 4. INJECTION ---
     s.bottom.huePos += 0.002 * params.simulationSpeed;
