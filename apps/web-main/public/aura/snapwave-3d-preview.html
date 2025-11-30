@@ -38,6 +38,7 @@
         border-radius: 0 6px 6px 0;
         z-index: 10;
         box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+        display: none;
       }
 
       h1 {
@@ -227,6 +228,11 @@
         chromagram: new Float32Array(12),
         waveform_peak: 0.0,
         time: 0,
+        decay: 0.1,
+        osc_speed: 1.0,
+        time_scale: 1.0,
+        hue_speed: 0.0,
+        hue_pos: 0.0,
       };
 
       // --- SCENE SETUP ---
@@ -245,6 +251,7 @@
       const renderer = new THREE.WebGLRenderer({
         antialias: false,
         powerPreference: 'high-performance',
+        alpha: true,
       });
       renderer.setSize(window.innerWidth, window.innerHeight);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
@@ -254,11 +261,7 @@
       document.getElementById('canvas-container').appendChild(renderer.domElement);
 
       const controls = new OrbitControls(camera, renderer.domElement);
-      controls.enableDamping = true;
-      controls.dampingFactor = 0.05;
-      controls.autoRotate = false;
-      controls.autoRotateSpeed = 0.0;
-      controls.maxPolarAngle = Math.PI / 1.5;
+      controls.enabled = false;
 
       // --- POST PROCESSING ---
       const composer = new EffectComposer(renderer);
@@ -369,21 +372,10 @@
 
       const geometry = new THREE.PlaneGeometry(33, 5.4);
       const lgpMesh = new THREE.Mesh(geometry, lgpMaterial);
-      lgpMesh.position.y = 2.7;
+      lgpMesh.position.y = 0;
       scene.add(lgpMesh);
 
       // --- ENVIRONMENT ---
-      const floorGeo = new THREE.PlaneGeometry(100, 100);
-      const floorMat = new THREE.MeshPhysicalMaterial({
-        color: 0x080808,
-        roughness: 0.2,
-        metalness: 0.8,
-        clearcoat: 0.5,
-      });
-      const floor = new THREE.Mesh(floorGeo, floorMat);
-      floor.rotation.x = -Math.PI / 2;
-      scene.add(floor);
-
       const ambient = new THREE.AmbientLight(0xffffff, 0.05);
       scene.add(ambient);
 
@@ -545,29 +537,53 @@
         lgpMaterial.uniforms.uSpread.value = val;
         document.getElementById('val-spread').innerText = val.toFixed(3);
       });
-      document.getElementById('decay').addEventListener('input', (e) => {
-        const val = parseFloat(e.target.value);
-        state.decay = val;
-        document.getElementById('val-decay').innerText = val.toFixed(2);
-      });
+      {
+        const el = document.getElementById('decay');
+        if (el) {
+          el.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            state.decay = val;
+            const v = document.getElementById('val-decay');
+            if (v) v.innerText = val.toFixed(2);
+          });
+        }
+      }
 
-      document.getElementById('oscSpeed').addEventListener('input', (e) => {
-        const val = parseFloat(e.target.value);
-        state.osc_speed = val;
-        document.getElementById('val-osc').innerText = `${val.toFixed(1)}x`;
-      });
+      {
+        const el = document.getElementById('oscSpeed');
+        if (el) {
+          el.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            state.osc_speed = val;
+            const v = document.getElementById('val-osc');
+            if (v) v.innerText = `${val.toFixed(1)}x`;
+          });
+        }
+      }
 
-      document.getElementById('tempo').addEventListener('input', (e) => {
-        const val = parseFloat(e.target.value);
-        state.time_scale = val;
-        document.getElementById('val-tempo').innerText = `${val.toFixed(1)}x`;
-      });
+      {
+        const el = document.getElementById('tempo');
+        if (el) {
+          el.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            state.time_scale = val;
+            const v = document.getElementById('val-tempo');
+            if (v) v.innerText = `${val.toFixed(1)}x`;
+          });
+        }
+      }
 
-      document.getElementById('hueRate').addEventListener('input', (e) => {
-        const val = parseFloat(e.target.value);
-        state.hue_speed = 0.001 * val;
-        document.getElementById('val-hue').innerText = `${val.toFixed(1)}x`;
-      });
+      {
+        const el = document.getElementById('hueSpeed');
+        if (el) {
+          el.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            state.hue_speed = 0.001 * val;
+            const v = document.getElementById('val-hueSpeed');
+            if (v) v.innerText = `${val.toFixed(1)}x`;
+          });
+        }
+      }
 
       window.addEventListener('resize', () => {
         camera.aspect = window.innerWidth / window.innerHeight;
