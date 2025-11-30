@@ -174,27 +174,29 @@ export function useK1Physics(params: PhysicsParams) {
 
     // --- 2. DIAGNOSTIC OVERRIDE ---
     if (params.diagnosticMode !== 'NONE') {
-      bottomTrigger = 0;
-      topTrigger = 0;
+      // Exclusive Mode: Clear buffers and write STATIC pattern only
+      // 1. Clear both buffers to black
+      s.top.leds.fill(0);
+      s.bottom.leds.fill(0);
 
-      // Fixed patterns for inspection
-      // Use absolute indices to avoid motionMode mirroring logic interference
       const center = Math.floor(LED_COUNT / 2);
 
       if (params.diagnosticMode === 'TOP_ONLY' || params.diagnosticMode === 'COLLISION') {
-        // Inject into Top
-        // Static bright lobes at 25%, 50%, 75%
-        addColor(s.top.leds, Math.floor(LED_COUNT * 0.25), 1, 1, 1, 0.5);
-        addColor(s.top.leds, center, 1, 1, 1, 0.5); // True center
-        addColor(s.top.leds, Math.floor(LED_COUNT * 0.75), 1, 1, 1, 0.5);
+        // Single clean impulse at center
+        addColor(s.top.leds, center, 1, 1, 1, 1.0);
       }
 
       if (params.diagnosticMode === 'BOTTOM_ONLY' || params.diagnosticMode === 'COLLISION') {
-        // Inject into Bottom
-        addColor(s.bottom.leds, Math.floor(LED_COUNT * 0.25), 1, 1, 1, 0.5);
-        addColor(s.bottom.leds, center, 1, 1, 1, 0.5); // True center
-        addColor(s.bottom.leds, Math.floor(LED_COUNT * 0.75), 1, 1, 1, 0.5);
+        // Single clean impulse at center
+        addColor(s.bottom.leds, center, 1, 1, 1, 1.0);
       }
+
+      // Upload and return early - SKIP ALL PHYSICS
+      texBottom.image.data.set(s.bottom.leds);
+      texBottom.needsUpdate = true;
+      texTop.image.data.set(s.top.leds);
+      texTop.needsUpdate = true;
+      return;
     }
 
     // --- 3. PHYSICS UPDATE (Dual Channel) ---
