@@ -87,7 +87,7 @@ export default function Page() {
             </div>
 
             <div className="relative mt-8 w-full px-2 sm:px-8 flex justify-center">
-              <div className="relative aspect-[55/9] w-[min(90vw,60rem)] max-w-[60rem] overflow-hidden rounded-[1.75rem] border border-white/5 bg-black shadow-[0_0_4rem_rgba(0,0,0,0.9)]">
+              <div className="relative aspect-[32/6] w-[min(90vw,60rem)] max-w-[60rem] overflow-hidden rounded-[1.75rem] border border-white/5 bg-black shadow-[0_0_4rem_rgba(0,0,0,0.9)]">
                 <LandingViz />
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
               </div>

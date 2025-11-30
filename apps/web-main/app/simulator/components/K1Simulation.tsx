@@ -234,22 +234,17 @@ export function K1Simulation() {
     }
   };
 
-  const hsvToRgb = (h: number, s: number, v: number) => {
+  const hsvToRgb = (hInput: number, s: number, v: number) => {
     let r = 0,
       g = 0,
-      b = 0,
-      i,
-      f,
-      p,
-      q,
-      t;
-    h = h % 1;
+      b = 0;
+    let h = hInput % 1;
     if (h < 0) h += 1;
-    i = Math.floor(h * 6);
-    f = h * 6 - i;
-    p = v * (1 - s);
-    q = v * (1 - f * s);
-    t = v * (1 - (1 - f) * s);
+    const i = Math.floor(h * 6);
+    const f = h * 6 - i;
+    const p = v * (1 - s);
+    const q = v * (1 - f * s);
+    const t = v * (1 - (1 - f) * s);
     switch (i % 6) {
       case 0:
         r = v;
@@ -327,7 +322,7 @@ export function K1Simulation() {
 
     // Oscillator
     let oscillation = 0;
-    let millis = s.time * 1000;
+    const millis = s.time * 1000;
     for (let i = 0; i < 12; i++) {
       if (s.chromagram[i] > 0.05) {
         oscillation += s.chromagram[i] * Math.sin(millis * 0.001 * (1.0 + i * 0.5));

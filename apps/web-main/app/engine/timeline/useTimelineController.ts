@@ -1,7 +1,6 @@
 import { useRef, useEffect, useState, useMemo } from 'react';
 import { K1_HERO_TIMELINE, TIMELINE_DURATION } from './sequence';
-import { TimelineParamTarget, TimelineSegment } from './types';
-import { DiagnosticMode } from '../useK1Physics';
+import type { TimelineParamTarget, TimelineSegment } from './types';
 
 interface UseTimelineControllerProps {
   enabled: boolean;
@@ -130,7 +129,9 @@ export function useTimelineController({
 
     keys.forEach((key) => {
       const toVal = activeSegment.to[key];
-      let fromVal = activeSegment.from ? activeSegment.from[key] : undefined;
+      let fromVal: TimelineParamTarget[typeof key] | undefined = activeSegment.from
+        ? activeSegment.from[key]
+        : undefined;
 
       if (fromVal === undefined && prevSegment) {
         fromVal = prevSegment.to[key];
@@ -138,10 +139,17 @@ export function useTimelineController({
 
       // If still undefined, fallback to manual
       if (fromVal === undefined) {
-        if (key in manualVisuals) fromVal = manualVisuals[key as keyof typeof manualVisuals] as any;
-        else if (key in manualPhysics)
-          fromVal = manualPhysics[key as keyof typeof manualPhysics] as any;
-        else if (key === 'diagnosticMode') fromVal = manualDiagnostics.diagnosticMode as any;
+        if (key in manualVisuals) {
+          fromVal = manualVisuals[
+            key as keyof UseTimelineControllerProps['manualVisuals']
+          ] as TimelineParamTarget[typeof key];
+        } else if (key in manualPhysics) {
+          fromVal = manualPhysics[
+            key as keyof UseTimelineControllerProps['manualPhysics']
+          ] as TimelineParamTarget[typeof key];
+        } else if (key === 'diagnosticMode') {
+          fromVal = manualDiagnostics.diagnosticMode as TimelineParamTarget['diagnosticMode'];
+        }
       }
 
       // Interpolate
