@@ -6,11 +6,29 @@ export const edgeLitShader = {
     uniform sampler2D uLedStateBottom;
     uniform sampler2D uLedStateTop;
     uniform float uResolution;
-    uniform float uFalloff;
+    
+    // Global visual params
     uniform float uExposure;
-    uniform float uSpread;
     uniform float uBaseLevel;
     uniform vec3 uTint;
+
+    // Optics: Vertical Falloff
+    uniform float uTopFalloff;
+    uniform float uBottomFalloff;
+
+    // Optics: Lateral Spread (Blur)
+    uniform float uTopSpreadNear;
+    uniform float uTopSpreadFar;
+    uniform float uBottomSpreadNear;
+    uniform float uBottomSpreadFar;
+
+    // Optics: Interaction
+    uniform float uColumnBoostStrength;
+    uniform float uColumnBoostExponent;
+
+    // Optics: Mechanical
+    uniform float uEdgeHotspotStrength;
+    uniform float uEdgeHotspotWidth;
 
     varying vec2 vUv;
 
@@ -20,18 +38,17 @@ export const edgeLitShader = {
     void main() {
       // --- 1. VERTICAL ATTENUATION (Physical Distance) ---
       // Light decays as it travels through the plate
-      float bottomInfluence = pow(1.0 - vUv.y, uFalloff);
-      float topInfluence = pow(vUv.y, uFalloff);
+      float bottomInfluence = pow(1.0 - vUv.y, uBottomFalloff);
+      float topInfluence = pow(vUv.y, uTopFalloff);
 
       // --- 2. LATERAL DIFFUSION (Optical Scattering) ---
       // Top: "Ribs" -> Sharp near source, blurs quickly
-      float topSpread = uSpread * (0.1 + (1.0 - vUv.y) * 2.0);
+      float topSpread = mix(uTopSpreadNear, uTopSpreadFar, 1.0 - vUv.y);
       
       // Bottom: "Footlights" -> Broader, softer domes
-      float bottomSpread = uSpread * (0.3 + vUv.y * 4.0);
+      float bottomSpread = mix(uBottomSpreadNear, uBottomSpreadFar, vUv.y);
 
       // --- 3. SAMPLE LED BUFFERS ---
-      // We use different spread values to create the distinct "Top Ribs" vs "Bottom Domes" look
       vec3 colorBottom = sampleStrip(uLedStateBottom, vUv, bottomSpread, uResolution);
       vec3 colorTop = sampleStrip(uLedStateTop, vUv, topSpread, uResolution);
 
@@ -39,20 +56,27 @@ export const edgeLitShader = {
       // Constructive interference where both top and bottom are active at the same X
       // This simulates the "volumetric column" effect
       vec3 interaction = colorBottom * colorTop;
-      float interactionStrength = length(interaction);
-      // Boost columns in the middle of the plate
-      float midPlateMask = smoothstep(0.2, 0.5, vUv.y) * smoothstep(0.8, 0.5, vUv.y);
-      vec3 columnBoost = interaction * midPlateMask * 4.0; // Arbitrary boost factor
+      
+      // Nonlinear boost for the interaction (make columns pop)
+      // We use a power function to sharpen the columns
+      // Clamp to avoid blowing out
+      vec3 boostedInteraction = pow(interaction, vec3(uColumnBoostExponent)) * uColumnBoostStrength;
+
+      // Apply mid-plate mask (strongest in middle, weak at edges)
+      // Simple parabolic curve: 1.0 at y=0.5, 0.0 at y=0/1
+      float midPlateMask = 4.0 * vUv.y * (1.0 - vUv.y); 
+      vec3 columnEffect = boostedInteraction * midPlateMask;
 
       // --- 5. EDGE HOTSPOTS (Mechanical Cutouts) ---
       // Boost brightness at the very edges of the unit
-      float edgeMask = smoothstep(0.02, 0.0, vUv.x) + smoothstep(0.98, 1.0, vUv.x);
-      vec3 hotspotBoost = (colorBottom + colorTop) * edgeMask * 2.0;
+      float edgeDist = min(vUv.x, 1.0 - vUv.x);
+      float edgeMask = smoothstep(uEdgeHotspotWidth, 0.0, edgeDist);
+      vec3 hotspotBoost = (colorBottom + colorTop) * edgeMask * uEdgeHotspotStrength;
 
       // --- 6. COMPOSITION ---
       vec3 finalColor = (colorBottom * bottomInfluence) + 
                         (colorTop * topInfluence) + 
-                        columnBoost +
+                        columnEffect +
                         hotspotBoost;
 
       // --- 7. TONEMAPPING & OUTPUT ---

@@ -1,9 +1,14 @@
 import React, { useMemo } from 'react';
 import * as THREE from 'three';
-import { useThree, createPortal } from '@react-three/fiber';
+import { useThree, createPortal, useFrame } from '@react-three/fiber';
 import { useLayerManager } from '../LayerManager';
 
-export const Compositor: React.FC = () => {
+type Props = {
+  offset?: [number, number];
+  scale?: [number, number];
+};
+
+export const Compositor: React.FC<Props> = ({ offset = [0, 0], scale = [1, 1] }) => {
   const layers = useLayerManager((s) => s.layers);
   const { size } = useThree();
 
@@ -17,6 +22,8 @@ export const Compositor: React.FC = () => {
       uniforms: {
         tDiffuse: { value: null },
         uOpacity: { value: 1.0 },
+        uOffset: { value: new THREE.Vector2(0, 0) },
+        uScale: { value: new THREE.Vector2(1, 1) },
       },
       vertexShader: `
         varying vec2 vUv;
@@ -28,9 +35,15 @@ export const Compositor: React.FC = () => {
       fragmentShader: `
         uniform sampler2D tDiffuse;
         uniform float uOpacity;
+        uniform vec2 uOffset;
+        uniform vec2 uScale;
         varying vec2 vUv;
         void main() {
-          vec4 tex = texture2D(tDiffuse, vUv);
+          vec2 uvp = (vUv - uOffset) / uScale;
+          if (uvp.x < 0.0 || uvp.x > 1.0 || uvp.y < 0.0 || uvp.y > 1.0) {
+            discard;
+          }
+          vec4 tex = texture2D(tDiffuse, uvp);
           gl_FragColor = tex * uOpacity;
         }
       `,
@@ -40,6 +53,11 @@ export const Compositor: React.FC = () => {
       depthWrite: false,
     });
   }, []);
+
+  useFrame(({ gl }) => {
+    gl.setRenderTarget(null);
+    gl.render(scene, camera);
+  });
 
   return createPortal(
     <>
@@ -54,6 +72,8 @@ export const Compositor: React.FC = () => {
               args={[material]}
               uniforms-tDiffuse-value={layer.fbo.texture}
               uniforms-uOpacity-value={layer.opacity}
+              uniforms-uOffset-value={new THREE.Vector2(offset[0], offset[1])}
+              uniforms-uScale-value={new THREE.Vector2(scale[0], scale[1])}
               transparent={true}
               blending={layer.blendMode === 'ADD' ? THREE.AdditiveBlending : THREE.NormalBlending}
             />

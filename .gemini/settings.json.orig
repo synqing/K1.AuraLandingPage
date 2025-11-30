@@ -1,0 +1,14 @@
+{
+  "includeDirectories": [
+    "apps/web-main",
+    "docs",
+    "prototypes"
+  ],
+  "checkpointing": {
+    "enabled": true
+  },
+  "tools": {
+    "exclude": []
+  },
+  "theme": "GitHub"
+}

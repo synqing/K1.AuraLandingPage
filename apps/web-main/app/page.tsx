@@ -39,6 +39,10 @@ const LiquidMetalHero = dynamic(() => import('@/components/LiquidMetalHero'), {
   ),
 });
 
+const LandingViz = dynamic(() => import('@/components/LandingViz'), {
+  ssr: false,
+});
+
 export default function Page() {
   return (
     <main className="relative min-h-screen snap-y snap-mandatory bg-black text-[#F2F2F2]">
@@ -82,14 +86,9 @@ export default function Page() {
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,184,77,0.4)_0,transparent_55%)] blur-3xl mix-blend-screen opacity-50" />
             </div>
 
-            <div className="relative mt-8 w-full max-w-4xl px-2 sm:px-8">
-              <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[1.75rem] border border-white/5 bg-black shadow-[0_0_4rem_rgba(0,0,0,0.9)]">
-                <iframe
-                  src="/aura/snapwave-3d-preview.html"
-                  title="K1 Live Visualization"
-                  loading="lazy"
-                  className="h-full w-full border-none"
-                />
+            <div className="relative mt-8 w-full px-2 sm:px-8 flex justify-center">
+              <div className="relative aspect-[55/9] w-[min(90vw,60rem)] max-w-[60rem] overflow-hidden rounded-[1.75rem] border border-white/5 bg-black shadow-[0_0_4rem_rgba(0,0,0,0.9)]">
+                <LandingViz />
                 <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
               </div>
               <p className="mt-4 text-center text-[clamp(0.75rem,0.95vw,1rem)] font-space uppercase tracking-[0.2em] text-zinc-400">
