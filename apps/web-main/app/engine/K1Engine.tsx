@@ -164,6 +164,7 @@ export const K1Engine: React.FC<K1EngineProps> = ({ compositorRect }) => {
         uniforms: {},
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // --- UNIFORM SYNC ---
@@ -191,6 +192,7 @@ export const K1Engine: React.FC<K1EngineProps> = ({ compositorRect }) => {
       uEdgeHotspotWidth: { value: params.edgeHotspotWidth },
     }),
     [] // Create once on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   );
 
   const uniformsRef = useRef(edgeLitUniforms);
