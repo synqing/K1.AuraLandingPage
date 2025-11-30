@@ -13,7 +13,7 @@ type Props = {
 export default function LiquidMetalHero({ className }: Props) {
   return (
     <div
-      className={`relative aspect-[16/9] w-full overflow-hidden rounded-[1.75rem] border border-white/5 bg-black shadow-[0_0_4rem_rgba(0,0,0,0.9)] ${className ?? ''}`}
+      className={`relative aspect-[55/9] w-full overflow-hidden rounded-[1.75rem] border border-white/5 bg-black shadow-[0_0_4rem_rgba(0,0,0,0.9)] ${className ?? ''}`}
     >
       <LiquidMetal
         width={1280}

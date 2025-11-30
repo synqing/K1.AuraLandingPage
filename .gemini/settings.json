@@ -1,14 +1,20 @@
 {
-  "includeDirectories": [
-    "apps/web-main",
-    "docs",
-    "prototypes"
-  ],
-  "checkpointing": {
-    "enabled": true
+  "general": {
+    "checkpointing": {
+      "enabled": true
+    }
+  },
+  "context": {
+    "includeDirectories": [
+      "apps/web-main",
+      "docs",
+      "prototypes"
+    ]
+  },
+  "ui": {
+    "theme": "GitHub"
   },
   "tools": {
     "exclude": []
-  },
-  "theme": "GitHub"
+  }
 }
