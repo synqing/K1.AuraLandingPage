@@ -22,8 +22,8 @@ export default function LandingViz() {
         <Suspense fallback={null}>
           <K1Engine
             compositorRect={{
-              offset: [0, 0.3],
-              scale: [1, 0.1875],
+              offset: [0, 0],
+              scale: [1, 1],
             }}
           />
         </Suspense>
