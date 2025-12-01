@@ -1,18 +1,43 @@
 'use client';
 
-import { folder, useControls } from 'leva';
-import type React from 'react';
-import { useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import * as THREE from 'three';
+import { useControls, folder } from 'leva';
+import { useK1Physics, DiagnosticMode } from './useK1Physics';
+import { useLayerManager } from './LayerManager';
+import { VisualLayer } from './components/VisualLayer';
 import { Compositor } from './components/Compositor';
 import { DebugOverlay } from './components/Debug/DebugOverlay';
-import { VisualLayer } from './components/VisualLayer';
-import { useLayerManager } from './LayerManager';
 import { edgeLitShader } from './shaders/edge-lit';
-import { TIMELINE_DURATION } from './timeline/sequence';
 import { useTimelineController } from './timeline/useTimelineController';
-import { type DiagnosticMode, useK1Physics } from './useK1Physics';
-import { K1_HERO_PRESET } from './presets';
+import { TIMELINE_DURATION } from './timeline/sequence';
+
+// --- HERO PRESET DEFINITION ---
+export const K1_HERO_PRESET = {
+  visuals: {
+    exposure: 4.0,
+    baseLevel: 0.0,
+    tint: '#ffffff',
+  },
+  optics: {
+    topSpreadNear: 0.0706,
+    topSpreadFar: 0.0539,
+    bottomSpreadNear: 0.0706,
+    bottomSpreadFar: 0.0539,
+    topFalloff: 2.61,
+    bottomFalloff: 2.61,
+    columnBoostStrength: 0.0,
+    columnBoostExponent: 1.2,
+    edgeHotspotStrength: 5.0,
+    edgeHotspotWidth: 0.1,
+  },
+  physics: {
+    motionMode: 'Center Origin',
+    simulationSpeed: 1.0,
+    decay: 0.15,
+    ghostAudio: true,
+  },
+};
 
 type K1EngineProps = {
   compositorRect?: {
@@ -29,15 +54,14 @@ export const K1Engine: React.FC<K1EngineProps> = ({ compositorRect }) => {
       loop: { value: true },
       timelineTime: { value: 0, min: 0, max: TIMELINE_DURATION, step: 0.1 },
     }),
+    Modes: folder({
+      heroMode: { value: true },
+    }),
     Visuals: folder({
       // Deprecated "falloff" and "spread" from here as they are now Optical properties
       // Keeping them if timeline targets them, but for tuning we use Optics
       exposure: { value: K1_HERO_PRESET.visuals.exposure, min: 0.1, max: 20.0 },
-      baseLevel: {
-        value: K1_HERO_PRESET.visuals.baseLevel,
-        min: 0.0,
-        max: 1.0,
-      },
+      baseLevel: { value: K1_HERO_PRESET.visuals.baseLevel, min: 0.0, max: 1.0 },
       tint: { value: K1_HERO_PRESET.visuals.tint },
 
       // Legacy fallbacks for timeline compatibility (will be ignored if Optics override)
@@ -51,12 +75,7 @@ export const K1Engine: React.FC<K1EngineProps> = ({ compositorRect }) => {
         max: 0.12,
         step: 0.001,
       },
-      topSpreadFar: {
-        value: K1_HERO_PRESET.optics.topSpreadFar,
-        min: 0.0,
-        max: 0.12,
-        step: 0.001,
-      },
+      topSpreadFar: { value: K1_HERO_PRESET.optics.topSpreadFar, min: 0.0, max: 0.12, step: 0.001 },
       bottomSpreadNear: {
         value: K1_HERO_PRESET.optics.bottomSpreadNear,
         min: 0.0,
@@ -69,53 +88,25 @@ export const K1Engine: React.FC<K1EngineProps> = ({ compositorRect }) => {
         max: 0.12,
         step: 0.001,
       },
-      topFalloff: {
-        value: K1_HERO_PRESET.optics.topFalloff,
-        min: 0.5,
-        max: 10.0,
-      },
-      bottomFalloff: {
-        value: K1_HERO_PRESET.optics.bottomFalloff,
-        min: 0.5,
-        max: 10.0,
-      },
-      columnBoostStrength: {
-        value: K1_HERO_PRESET.optics.columnBoostStrength,
-        min: 0.0,
-        max: 5.0,
-      },
-      columnBoostExponent: {
-        value: K1_HERO_PRESET.optics.columnBoostExponent,
-        min: 0.5,
-        max: 3.0,
-      },
-      edgeHotspotStrength: {
-        value: K1_HERO_PRESET.optics.edgeHotspotStrength,
-        min: 0.0,
-        max: 5.0,
-      },
-      edgeHotspotWidth: {
-        value: K1_HERO_PRESET.optics.edgeHotspotWidth,
-        min: 0.0,
-        max: 0.25,
-      },
+      topFalloff: { value: K1_HERO_PRESET.optics.topFalloff, min: 0.5, max: 10.0 },
+      bottomFalloff: { value: K1_HERO_PRESET.optics.bottomFalloff, min: 0.5, max: 10.0 },
+      columnBoostStrength: { value: K1_HERO_PRESET.optics.columnBoostStrength, min: 0.0, max: 5.0 },
+      columnBoostExponent: { value: K1_HERO_PRESET.optics.columnBoostExponent, min: 0.5, max: 3.0 },
+      edgeHotspotStrength: { value: K1_HERO_PRESET.optics.edgeHotspotStrength, min: 0.0, max: 5.0 },
+      edgeHotspotWidth: { value: K1_HERO_PRESET.optics.edgeHotspotWidth, min: 0.0, max: 0.25 },
     }),
     Physics: folder({
       motionMode: {
         options: ['Center Origin', 'Left Origin', 'Right Origin'],
         value: K1_HERO_PRESET.physics.motionMode,
       },
-      simulationSpeed: {
-        value: K1_HERO_PRESET.physics.simulationSpeed,
-        min: 0.1,
-        max: 5.0,
-      },
+      simulationSpeed: { value: K1_HERO_PRESET.physics.simulationSpeed, min: 0.1, max: 5.0 },
       decay: { value: K1_HERO_PRESET.physics.decay, min: 0.01, max: 0.5 },
       ghostAudio: { value: K1_HERO_PRESET.physics.ghostAudio },
     }),
     Diagnostics: folder({
       diagnosticMode: {
-        options: ['NONE', 'TOP_ONLY', 'BOTTOM_ONLY', 'COLLISION'],
+        options: ['NONE', 'TOP_ONLY', 'BOTTOM_ONLY', 'COLLISION', 'EDGES_ONLY'],
         value: 'NONE',
       },
       showDebugOverlay: { value: false },
@@ -123,40 +114,39 @@ export const K1Engine: React.FC<K1EngineProps> = ({ compositorRect }) => {
   });
 
   // --- TIMELINE CONTROLLER ---
-  const { effectiveVisuals, effectivePhysics, effectiveDiagnostics, effectiveOptics } =
-    useTimelineController({
-      enabled: params.timelineEnabled,
-      loop: params.loop,
-      timelineTimeControl: params.timelineTime,
-      manualVisuals: {
-        falloff: params.falloff, // Legacy
-        exposure: params.exposure,
-        spread: params.spread, // Legacy
-        baseLevel: params.baseLevel,
-        tint: params.tint,
-      },
-      manualOptics: {
-        topSpreadNear: params.topSpreadNear,
-        topSpreadFar: params.topSpreadFar,
-        bottomSpreadNear: params.bottomSpreadNear,
-        bottomSpreadFar: params.bottomSpreadFar,
-        topFalloff: params.topFalloff,
-        bottomFalloff: params.bottomFalloff,
-        columnBoostStrength: params.columnBoostStrength,
-        columnBoostExponent: params.columnBoostExponent,
-        edgeHotspotStrength: params.edgeHotspotStrength,
-        edgeHotspotWidth: params.edgeHotspotWidth,
-      },
-      manualPhysics: {
-        motionMode: params.motionMode,
-        simulationSpeed: params.simulationSpeed,
-        decay: params.decay,
-        ghostAudio: params.ghostAudio,
-      },
-      manualDiagnostics: {
-        diagnosticMode: params.diagnosticMode,
-      },
-    });
+  const { effectiveVisuals, effectivePhysics, effectiveDiagnostics } = useTimelineController({
+    enabled: params.timelineEnabled,
+    loop: params.loop,
+    timelineTimeControl: params.timelineTime,
+    manualVisuals: {
+      falloff: params.falloff, // Legacy
+      exposure: params.exposure,
+      spread: params.spread, // Legacy
+      baseLevel: params.baseLevel,
+      tint: params.tint,
+    },
+    manualOptics: {
+      topSpreadNear: params.topSpreadNear,
+      topSpreadFar: params.topSpreadFar,
+      bottomSpreadNear: params.bottomSpreadNear,
+      bottomSpreadFar: params.bottomSpreadFar,
+      topFalloff: params.topFalloff,
+      bottomFalloff: params.bottomFalloff,
+      columnBoostStrength: params.columnBoostStrength,
+      columnBoostExponent: params.columnBoostExponent,
+      edgeHotspotStrength: params.edgeHotspotStrength,
+      edgeHotspotWidth: params.edgeHotspotWidth,
+    },
+    manualPhysics: {
+      motionMode: params.motionMode,
+      simulationSpeed: params.simulationSpeed,
+      decay: params.decay,
+      ghostAudio: params.ghostAudio,
+    },
+    manualDiagnostics: {
+      diagnosticMode: params.diagnosticMode,
+    },
+  });
 
   // --- PHYSICS KERNEL ---
   const { texBottom, texTop, ledCount } = useK1Physics({
@@ -165,6 +155,8 @@ export const K1Engine: React.FC<K1EngineProps> = ({ compositorRect }) => {
     ghostAudio: effectivePhysics.ghostAudio,
     motionMode: effectivePhysics.motionMode,
     diagnosticMode: effectiveDiagnostics.diagnosticMode as DiagnosticMode,
+    heroMode: params.heroMode,
+    heroLoopDuration: TIMELINE_DURATION,
   });
 
   // --- LAYER MANAGEMENT ---
@@ -182,9 +174,7 @@ export const K1Engine: React.FC<K1EngineProps> = ({ compositorRect }) => {
         uniforms: {},
       });
     }
-    // biome-ignore lint/correctness/useExhaustiveDependencies: Run once on mount
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [layers, addLayer]);
 
   // --- UNIFORM SYNC ---
   const edgeLitUniforms = useMemo(
@@ -199,20 +189,18 @@ export const K1Engine: React.FC<K1EngineProps> = ({ compositorRect }) => {
       uTint: { value: new THREE.Color(effectiveVisuals.tint) },
 
       // Optics (Not controlled by timeline yet, driven by Leva "Optics" folder)
-      uTopFalloff: { value: effectiveOptics.topFalloff },
-      uBottomFalloff: { value: effectiveOptics.bottomFalloff },
-      uTopSpreadNear: { value: effectiveOptics.topSpreadNear },
-      uTopSpreadFar: { value: effectiveOptics.topSpreadFar },
-      uBottomSpreadNear: { value: effectiveOptics.bottomSpreadNear },
-      uBottomSpreadFar: { value: effectiveOptics.bottomSpreadFar },
-      uColumnBoostStrength: { value: effectiveOptics.columnBoostStrength },
-      uColumnBoostExponent: { value: effectiveOptics.columnBoostExponent },
-      uEdgeHotspotStrength: { value: effectiveOptics.edgeHotspotStrength },
-      uEdgeHotspotWidth: { value: effectiveOptics.edgeHotspotWidth },
+      uTopFalloff: { value: params.topFalloff },
+      uBottomFalloff: { value: params.bottomFalloff },
+      uTopSpreadNear: { value: params.topSpreadNear },
+      uTopSpreadFar: { value: params.topSpreadFar },
+      uBottomSpreadNear: { value: params.bottomSpreadNear },
+      uBottomSpreadFar: { value: params.bottomSpreadFar },
+      uColumnBoostStrength: { value: params.columnBoostStrength },
+      uColumnBoostExponent: { value: params.columnBoostExponent },
+      uEdgeHotspotStrength: { value: params.edgeHotspotStrength },
+      uEdgeHotspotWidth: { value: params.edgeHotspotWidth },
     }),
     [] // Create once on mount
-    // biome-ignore lint/correctness/useExhaustiveDependencies: Stable reference for mutable uniforms
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   );
 
   const uniformsRef = useRef(edgeLitUniforms);
@@ -228,16 +216,16 @@ export const K1Engine: React.FC<K1EngineProps> = ({ compositorRect }) => {
   uniformsRef.current.uTint.value.set(effectiveVisuals.tint);
 
   // Optics (Manual tuning)
-  uniformsRef.current.uTopFalloff.value = effectiveOptics.topFalloff;
-  uniformsRef.current.uBottomFalloff.value = effectiveOptics.bottomFalloff;
-  uniformsRef.current.uTopSpreadNear.value = effectiveOptics.topSpreadNear;
-  uniformsRef.current.uTopSpreadFar.value = effectiveOptics.topSpreadFar;
-  uniformsRef.current.uBottomSpreadNear.value = effectiveOptics.bottomSpreadNear;
-  uniformsRef.current.uBottomSpreadFar.value = effectiveOptics.bottomSpreadFar;
-  uniformsRef.current.uColumnBoostStrength.value = effectiveOptics.columnBoostStrength;
-  uniformsRef.current.uColumnBoostExponent.value = effectiveOptics.columnBoostExponent;
-  uniformsRef.current.uEdgeHotspotStrength.value = effectiveOptics.edgeHotspotStrength;
-  uniformsRef.current.uEdgeHotspotWidth.value = effectiveOptics.edgeHotspotWidth;
+  uniformsRef.current.uTopFalloff.value = params.topFalloff;
+  uniformsRef.current.uBottomFalloff.value = params.bottomFalloff;
+  uniformsRef.current.uTopSpreadNear.value = params.topSpreadNear;
+  uniformsRef.current.uTopSpreadFar.value = params.topSpreadFar;
+  uniformsRef.current.uBottomSpreadNear.value = params.bottomSpreadNear;
+  uniformsRef.current.uBottomSpreadFar.value = params.bottomSpreadFar;
+  uniformsRef.current.uColumnBoostStrength.value = params.columnBoostStrength;
+  uniformsRef.current.uColumnBoostExponent.value = params.columnBoostExponent;
+  uniformsRef.current.uEdgeHotspotStrength.value = params.edgeHotspotStrength;
+  uniformsRef.current.uEdgeHotspotWidth.value = params.edgeHotspotWidth;
 
   return (
     <>

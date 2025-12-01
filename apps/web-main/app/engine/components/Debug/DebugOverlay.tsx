@@ -1,25 +1,18 @@
-import React, { useEffect, useRef } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
-import * as THREE from 'three';
+import { useEffect, useRef } from 'react';
+import { useFrame } from '@react-three/fiber';
+import type { DataTexture } from 'three';
 
 interface DebugOverlayProps {
-  texTop: THREE.DataTexture;
-  texBottom: THREE.DataTexture;
+  texTop: DataTexture;
+  texBottom: DataTexture;
   ledCount: number;
 }
 
-export const DebugOverlay: React.FC<DebugOverlayProps> = ({ texTop, texBottom, ledCount }) => {
-  const { gl, size } = useThree();
-
-  // --- 2D OVERLAY CANVAS ---
-  // We use a pure HTML5 2D canvas overlay for debug rendering
-  // This avoids fighting with the 3D scene composition
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+export const DebugOverlay = ({ texTop, texBottom, ledCount }: DebugOverlayProps) => {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
-    if (!canvasRef.current) return;
-
-    const canvas = canvasRef.current;
+    const canvas = document.createElement('canvas');
     canvas.style.position = 'absolute';
     canvas.style.bottom = '20px';
     canvas.style.right = '20px';
@@ -31,14 +24,12 @@ export const DebugOverlay: React.FC<DebugOverlayProps> = ({ texTop, texBottom, l
     canvas.style.pointerEvents = 'none';
     canvas.width = 320;
     canvas.height = 80;
-
-    // Append to document body to ensure it sits on top of everything
     document.body.appendChild(canvas);
+    canvasRef.current = canvas;
 
     return () => {
-      if (document.body.contains(canvas)) {
-        document.body.removeChild(canvas);
-      }
+      if (canvas.parentNode) canvas.parentNode.removeChild(canvas);
+      canvasRef.current = null;
     };
   }, []);
 
@@ -53,7 +44,7 @@ export const DebugOverlay: React.FC<DebugOverlayProps> = ({ texTop, texBottom, l
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // --- DRAW HELPERS ---
-    const drawStrip = (tex: THREE.DataTexture, y: number, label: string) => {
+    const drawStrip = (tex: DataTexture, y: number, label: string) => {
       const data = tex.image.data as Float32Array;
       const stride = 4; // RGBA
       const width = canvas.width;
@@ -73,10 +64,6 @@ export const DebugOverlay: React.FC<DebugOverlayProps> = ({ texTop, texBottom, l
         const g = data[idx + 1];
         const b = data[idx + 2];
 
-        // Simple max brightness for visualization
-        const intensity = Math.max(r, g, b);
-        const brightness = Math.min(255, Math.floor(intensity * 255));
-
         ctx.fillStyle = `rgb(${Math.min(255, r * 255)}, ${Math.min(255, g * 255)}, ${Math.min(255, b * 255)})`;
         ctx.fillRect(i * pixelWidth, y, pixelWidth + 0.5, barHeight); // +0.5 to avoid subpixel gaps
       }
@@ -89,5 +76,5 @@ export const DebugOverlay: React.FC<DebugOverlayProps> = ({ texTop, texBottom, l
     drawStrip(texBottom, 55, 'BOTTOM CHANNEL');
   });
 
-  return <canvas ref={canvasRef} />;
+  return null;
 };

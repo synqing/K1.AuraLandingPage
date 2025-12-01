@@ -65,8 +65,9 @@ export const K1_HERO_TIMELINE: TimelineSequence = [
       motionMode: 'Left Origin',
       simulationSpeed: 1.2,
       decay: 0.15,
-      // Asymmetric optics for flow?
-      topSpreadFar: 0.08, // Widen the throw
+      // Maintain symmetric optics during flow
+      topSpreadFar: 0.08,
+      bottomSpreadFar: 0.08,
     },
   },
   {
