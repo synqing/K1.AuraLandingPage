@@ -1,5 +1,5 @@
 import { TimelineSequence } from './types';
-import { K1_HERO_PRESET } from '../K1Engine';
+import { K1_HERO_PRESET } from '../presets';
 
 export const K1_HERO_TIMELINE: TimelineSequence = [
   {
