@@ -2,6 +2,7 @@ node_modules/
 .next/
 dist/
 build/
+.pio/
 .DS_Store
 .env
 .env.local
