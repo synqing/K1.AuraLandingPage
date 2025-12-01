@@ -45,13 +45,10 @@
 
 // ----------- CONFIGURE YOUR HARDWARE HERE ----------------------------------
 
-// Number of LEDs on EACH strip (top and bottom)
-#define NUM_LEDS_PER_STRIP 160  // <-- change if your K1 uses a different count
-
 // Data pins for top and bottom strips
 // TODO: set these to the actual GPIOs driving your strips
-#define PIN_TOP    5   // example GPIO for top LEDs
-#define PIN_BOTTOM 6   // example GPIO for bottom LEDs
+// #define PIN_TOP    5   // example GPIO for top LEDs - now from platformio.ini
+// #define PIN_BOTTOM 6   // example GPIO for bottom LEDs - now from platformio.ini
 
 // LED type & color order for NeoPixel
 #define LED_TYPE    NEO_GRB + NEO_KHZ800
@@ -61,8 +58,9 @@
 
 // ----------- OBJECTS -------------------------------------------------------
 
-Adafruit_NeoPixel stripTop(NUM_LEDS_PER_STRIP, PIN_TOP, LED_TYPE);
-Adafruit_NeoPixel stripBottom(NUM_LEDS_PER_STRIP, PIN_BOTTOM, LED_TYPE);
+// NUM_LEDS_PER_STRIP will come from platformio.ini build_flags
+Adafruit_NeoPixel stripTop(NUM_LEDS_PER_LEDS_PER_STRIP, PIN_TOP, LED_TYPE);
+Adafruit_NeoPixel stripBottom(NUM_LEDS_PER_LEDS_PER_STRIP, PIN_BOTTOM, LED_TYPE);
 
 // Enumeration of our calibration patterns
 enum CalPattern {
