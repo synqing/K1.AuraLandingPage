@@ -1,24 +1,23 @@
 import { TimelineSequence } from './types';
+import { K1_HERO_PRESET } from '../K1Engine';
 
 export const K1_HERO_TIMELINE: TimelineSequence = [
   {
-    name: 'Intro Fade In',
+    name: 'Void (Simmer)',
     startTime: 0.0,
-    duration: 3.0,
+    duration: 2.0,
     easing: 'easeInOutQuad',
     to: {
-      exposure: 4.0,
-      baseLevel: 0.2,
+      exposure: 0.0,
+      baseLevel: 0.0,
       tint: '#ffffff',
       motionMode: 'Center Origin',
-      ghostAudio: true,
-      simulationSpeed: 1.0,
-      decay: 0.15,
-      spread: 0.015,
-      falloff: 1.5,
+      ghostAudio: false,
       diagnosticMode: 'NONE',
+      // Optics - High Edge Contrast
+      edgeHotspotStrength: 8.0,
+      edgeHotspotWidth: 0.15,
     },
-    // Start from black/off
     from: {
       exposure: 0.0,
       baseLevel: 0.0,
@@ -26,45 +25,69 @@ export const K1_HERO_TIMELINE: TimelineSequence = [
     },
   },
   {
-    name: 'Build Energy',
-    startTime: 3.0,
-    duration: 5.0,
+    name: 'Ignition (Center Impulse)',
+    startTime: 2.0,
+    duration: 3.0,
     easing: 'easeOutCubic',
     to: {
-      exposure: 6.0,
-      spread: 0.025,
-      simulationSpeed: 1.5,
-      decay: 0.12,
-      tint: '#ffffff', // Keep white
+      exposure: 8.0, // Flash
+      baseLevel: 0.0,
+      ghostAudio: true,
+      simulationSpeed: 2.5, // Fast
+      decay: 0.25, // Sharp decay
+      // Wide initial burst
+      topSpreadNear: 0.1,
+      bottomSpreadNear: 0.1,
     },
   },
   {
-    name: 'Wide Wash (Color Shift)',
-    startTime: 8.0,
-    duration: 6.0,
+    name: 'Resonance (Gold Pulse)',
+    startTime: 5.0,
+    duration: 5.0,
     easing: 'easeInOutQuad',
     to: {
-      spread: 0.05,
       exposure: 5.0,
-      tint: '#ffbb66', // Warm gold
-      motionMode: 'Left Origin',
-      simulationSpeed: 0.8,
+      tint: '#FFB84D', // Signature Gold
+      simulationSpeed: 0.8, // Slow, heavy
+      decay: 0.1, // Long tails
+      // Tighten beam to calibrated
+      topSpreadNear: K1_HERO_PRESET.optics.topSpreadNear,
+      bottomSpreadNear: K1_HERO_PRESET.optics.bottomSpreadNear,
+      edgeHotspotStrength: 2.0, // Reduce edge glare
     },
   },
   {
-    name: 'Calm Down',
-    startTime: 14.0,
-    duration: 4.0,
+    name: 'Flow (Linear Propagation)',
+    startTime: 10.0,
+    duration: 6.0,
     easing: 'linear',
     to: {
-      spread: 0.015,
-      exposure: 4.0,
-      tint: '#ffffff',
-      motionMode: 'Center Origin',
-      simulationSpeed: 1.0,
+      motionMode: 'Left Origin',
+      simulationSpeed: 1.2,
       decay: 0.15,
+      // Asymmetric optics for flow?
+      topSpreadFar: 0.08, // Widen the throw
+    },
+  },
+  {
+    name: 'Equilibrium (Settle)',
+    startTime: 16.0,
+    duration: 4.0,
+    easing: 'easeOutCubic',
+    to: {
+      motionMode: 'Center Origin',
+      tint: '#FFFFFF',
+      exposure: K1_HERO_PRESET.visuals.exposure,
+      baseLevel: K1_HERO_PRESET.visuals.baseLevel,
+      simulationSpeed: K1_HERO_PRESET.physics.simulationSpeed,
+      decay: K1_HERO_PRESET.physics.decay,
+      // Return to calibrated optics
+      topSpreadNear: K1_HERO_PRESET.optics.topSpreadNear,
+      topSpreadFar: K1_HERO_PRESET.optics.topSpreadFar,
+      edgeHotspotStrength: K1_HERO_PRESET.optics.edgeHotspotStrength,
+      edgeHotspotWidth: K1_HERO_PRESET.optics.edgeHotspotWidth,
     },
   },
 ];
 
-export const TIMELINE_DURATION = 18.0;
+export const TIMELINE_DURATION = 20.0;

@@ -15,6 +15,18 @@ interface UseTimelineControllerProps {
     baseLevel: number;
     tint: string;
   };
+  manualOptics: {
+    topSpreadNear: number;
+    topSpreadFar: number;
+    bottomSpreadNear: number;
+    bottomSpreadFar: number;
+    topFalloff: number;
+    bottomFalloff: number;
+    columnBoostStrength: number;
+    columnBoostExponent: number;
+    edgeHotspotStrength: number;
+    edgeHotspotWidth: number;
+  };
   manualPhysics: {
     motionMode: string;
     simulationSpeed: number;
@@ -39,6 +51,7 @@ export function useTimelineController({
   loop,
   timelineTimeControl,
   manualVisuals,
+  manualOptics,
   manualPhysics,
   manualDiagnostics,
 }: UseTimelineControllerProps) {
@@ -143,6 +156,10 @@ export function useTimelineController({
           fromVal = manualVisuals[
             key as keyof UseTimelineControllerProps['manualVisuals']
           ] as TimelineParamTarget[typeof key];
+        } else if (key in manualOptics) {
+          fromVal = manualOptics[
+            key as keyof UseTimelineControllerProps['manualOptics']
+          ] as TimelineParamTarget[typeof key];
         } else if (key in manualPhysics) {
           fromVal = manualPhysics[
             key as keyof UseTimelineControllerProps['manualPhysics']
@@ -162,10 +179,11 @@ export function useTimelineController({
     });
 
     return targetParams;
-  }, [currentTime, enabled, manualVisuals, manualPhysics, manualDiagnostics]);
+  }, [currentTime, enabled, manualVisuals, manualOptics, manualPhysics, manualDiagnostics]);
 
   // --- 3. MERGE & OUTPUT ---
   const effectiveVisuals = { ...manualVisuals };
+  const effectiveOptics = { ...manualOptics };
   const effectivePhysics = { ...manualPhysics };
   const effectiveDiagnostics = { ...manualDiagnostics };
 
@@ -180,6 +198,28 @@ export function useTimelineController({
     if (interpolatedParams.baseLevel !== undefined)
       effectiveVisuals.baseLevel = interpolatedParams.baseLevel;
     if (interpolatedParams.tint !== undefined) effectiveVisuals.tint = interpolatedParams.tint;
+
+    // Optics
+    if (interpolatedParams.topSpreadNear !== undefined)
+      effectiveOptics.topSpreadNear = interpolatedParams.topSpreadNear;
+    if (interpolatedParams.topSpreadFar !== undefined)
+      effectiveOptics.topSpreadFar = interpolatedParams.topSpreadFar;
+    if (interpolatedParams.bottomSpreadNear !== undefined)
+      effectiveOptics.bottomSpreadNear = interpolatedParams.bottomSpreadNear;
+    if (interpolatedParams.bottomSpreadFar !== undefined)
+      effectiveOptics.bottomSpreadFar = interpolatedParams.bottomSpreadFar;
+    if (interpolatedParams.topFalloff !== undefined)
+      effectiveOptics.topFalloff = interpolatedParams.topFalloff;
+    if (interpolatedParams.bottomFalloff !== undefined)
+      effectiveOptics.bottomFalloff = interpolatedParams.bottomFalloff;
+    if (interpolatedParams.columnBoostStrength !== undefined)
+      effectiveOptics.columnBoostStrength = interpolatedParams.columnBoostStrength;
+    if (interpolatedParams.columnBoostExponent !== undefined)
+      effectiveOptics.columnBoostExponent = interpolatedParams.columnBoostExponent;
+    if (interpolatedParams.edgeHotspotStrength !== undefined)
+      effectiveOptics.edgeHotspotStrength = interpolatedParams.edgeHotspotStrength;
+    if (interpolatedParams.edgeHotspotWidth !== undefined)
+      effectiveOptics.edgeHotspotWidth = interpolatedParams.edgeHotspotWidth;
 
     // Physics
     if (interpolatedParams.motionMode !== undefined)
@@ -197,6 +237,7 @@ export function useTimelineController({
 
   return {
     effectiveVisuals,
+    effectiveOptics,
     effectivePhysics,
     effectiveDiagnostics,
     currentTime,
