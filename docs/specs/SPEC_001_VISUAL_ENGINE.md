@@ -283,3 +283,10 @@ Using `ffmpeg.wasm` is preferred over `MediaRecorder` for frame-perfect renderin
 
 **Approved By:** System Architect  
 **Date:** 2025-11-21
+ 
+## 9. Rendering Policy
+ 
+- No overlays, vignettes, gradients, masks, or UI elements may modify or occlude the visualization output without explicit approval.
+- The visualization container must render the engine output unmodified. Any decorative effects must be positioned behind or outside the visualization region and must be symmetric if used.
+- UI changes must not alter perceived top/bottom symmetry. Verification requires diagnostics sweep (TOP_ONLY, BOTTOM_ONLY, EDGES_ONLY) with timeline disabled and ghost audio off.
+- Violations of this policy are treated as defects; fixes must remove or neutralize the influence before release.

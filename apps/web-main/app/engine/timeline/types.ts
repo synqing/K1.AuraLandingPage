@@ -12,6 +12,18 @@ export type TimelineParamTarget = {
   baseLevel?: number;
   tint?: string; // Hex color
 
+  // Optics
+  topSpreadNear?: number;
+  topSpreadFar?: number;
+  bottomSpreadNear?: number;
+  bottomSpreadFar?: number;
+  topFalloff?: number;
+  bottomFalloff?: number;
+  columnBoostStrength?: number;
+  columnBoostExponent?: number;
+  edgeHotspotStrength?: number;
+  edgeHotspotWidth?: number;
+
   // Physics
   motionMode?: string;
   simulationSpeed?: number;

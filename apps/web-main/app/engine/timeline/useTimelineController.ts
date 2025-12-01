@@ -171,10 +171,18 @@ export function useTimelineController({
 
       // Interpolate
       if (typeof toVal === 'number' && typeof fromVal === 'number') {
-        targetParams[key] = fromVal + (toVal - fromVal) * p;
+        const fromN = fromVal;
+        const toN = toVal;
+        const val = fromN + (toN - fromN) * p;
+        targetParams[key] = val as unknown as TimelineParamTarget[typeof key];
+      } else if (typeof toVal === 'number' && typeof fromVal !== 'number') {
+        const fromN = 0;
+        const toN = toVal;
+        const val = fromN + (toN - fromN) * p;
+        targetParams[key] = val as unknown as TimelineParamTarget[typeof key];
       } else {
         // Strings, Booleans, Enums - Snap
-        targetParams[key] = p < 0.5 ? fromVal : toVal;
+        targetParams[key] = (p < 0.5 ? fromVal : toVal) as TimelineParamTarget[typeof key];
       }
     });
 

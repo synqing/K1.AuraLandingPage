@@ -45,7 +45,7 @@ export const DebugOverlay = ({ texTop, texBottom, ledCount }: DebugOverlayProps)
 
     // --- DRAW HELPERS ---
     const drawStrip = (tex: DataTexture, y: number, label: string) => {
-      const data = tex.image.data as Float32Array;
+      const data = tex.image.data as unknown as Float32Array;
       const stride = 4; // RGBA
       const width = canvas.width;
       const barHeight = 20;

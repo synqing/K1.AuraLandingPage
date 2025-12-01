@@ -1,7 +1,6 @@
-import React, { useRef, useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { useFrame, createPortal } from '@react-three/fiber';
 import * as THREE from 'three';
-import { IVisualLayer } from '../types';
 import { useLayerManager } from '../LayerManager';
 
 interface VisualLayerProps {

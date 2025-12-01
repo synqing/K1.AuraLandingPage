@@ -77,9 +77,6 @@ export default function Page() {
               <div className="absolute inset-0 bg-black/60" />
             </div>
           </div>
-
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-1/2 bg-gradient-to-t from-black via-black/90 to-transparent" />
-
           <div className="relative z-20 flex h-full w-full flex-col items-center justify-center px-4 sm:px-10">
             <div className="relative flex items-center justify-center w-full max-w-4xl">
               <LiquidMetalHero className="max-w-4xl" />
@@ -89,7 +86,6 @@ export default function Page() {
             <div className="relative mt-8 w-full px-2 sm:px-8 flex justify-center">
               <div className="relative aspect-[32/6] w-[min(90vw,60rem)] max-w-[60rem] overflow-hidden rounded-[1.75rem] border border-white/5 bg-black shadow-[0_0_4rem_rgba(0,0,0,0.9)]">
                 <LandingViz />
-                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
               </div>
               <p className="mt-4 text-center text-[clamp(0.75rem,0.95vw,1rem)] font-space uppercase tracking-[0.2em] text-zinc-400">
                 Live Audio-Reactive Visualization · Snapwave Physics Engine
@@ -263,7 +259,10 @@ async function submitAccessRequest(data: FormData) {
 
 function CTAForm() {
   return (
-    <form action={submitAccessRequest} className="space-y-5 font-space">
+    <form
+      action={submitAccessRequest as (data: FormData) => Promise<{ ok: boolean; message?: string }>}
+      className="space-y-5 font-space"
+    >
       <div className="space-y-2">
         <label htmlFor="email" className="block text-[clamp(0.86rem,0.98vw,1.05rem)] text-zinc-300">
           Receive an access link

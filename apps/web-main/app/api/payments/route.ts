@@ -8,7 +8,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, message: 'Invalid payload' }, { status: 400 });
   }
 
-  const { provider, amount, currency = 'usd', token, nonce } = body as Record<string, any>;
+  const { provider, amount, currency = 'usd', token, nonce } = body as Record<string, unknown>;
   if (typeof amount !== 'number' || amount <= 0) {
     return NextResponse.json({ ok: false, message: 'Amount is required' }, { status: 400 });
   }

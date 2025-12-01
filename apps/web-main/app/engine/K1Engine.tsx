@@ -244,7 +244,6 @@ export const K1Engine: React.FC<K1EngineProps> = ({ compositorRect }) => {
       <Compositor offset={compositorRect?.offset} scale={compositorRect?.scale} />
 
       {/* Diagnostics */}
-      {/* @ts-expect-error Leva types are loose */}
       {params.showDebugOverlay && (
         <DebugOverlay texTop={texTop} texBottom={texBottom} ledCount={ledCount} />
       )}
