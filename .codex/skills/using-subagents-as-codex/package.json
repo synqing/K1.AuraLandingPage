@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "codex-subagent-cli": "file:../../../../external-subagents"
+  }
+}

@@ -68,10 +68,23 @@ export const edgeLitShader = {
       vec3 columnEffect = boostedInteraction * midPlateMask;
 
       // --- 5. EDGE HOTSPOTS (Mechanical Cutouts) ---
-      // Boost brightness at the very edges of the unit
-      float edgeDist = min(vUv.x, 1.0 - vUv.x);
-      float edgeMask = smoothstep(uEdgeHotspotWidth, 0.0, edgeDist);
-      vec3 hotspotBoost = (colorBottom + colorTop) * edgeMask * uEdgeHotspotStrength;
+      // Corner wedge model: horizontal edge × vertical rail lobes
+      float x = vUv.x;
+      float y = vUv.y;
+      
+      // Horizontal: near edges strong, center weak
+      float distX = min(x, 1.0 - x);
+      float edgeX = smoothstep(uEdgeHotspotWidth, 0.0, distX);
+      
+      // Vertical: two Gaussian lobes near rails (top and bottom), fading toward mid-height
+      float sigmaY = 0.15;
+      float topLobe = exp(-pow((y - 1.0) / sigmaY, 2.0));
+      float bottomLobe = exp(-pow((y - 0.0) / sigmaY, 2.0));
+      float railY = max(topLobe, bottomLobe);
+      
+      // Final corner mask and boost applied multiplicatively on current colors
+      float cornerMask = edgeX * railY;
+      vec3 hotspotBoost = (colorBottom + colorTop) * cornerMask * uEdgeHotspotStrength;
 
       // --- 6. COMPOSITION ---
       vec3 finalColor = (colorBottom * bottomInfluence) + 

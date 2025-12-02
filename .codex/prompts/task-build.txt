@@ -1,0 +1,3 @@
+Work inside "/Users/spectrasynq/SpectraSynq.LandingPage/apps/web-main".
+Run `npm run build`.
+Summarize errors and warnings. Propose fixes.

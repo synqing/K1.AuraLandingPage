@@ -100,7 +100,7 @@ export function useTimelineController({
   }, [timelineTimeControl, enabled]);
 
   // --- 2. INTERPOLATION ENGINE ---
-  const interpolatedParams = useMemo(() => {
+  const interpolatedParams: TimelineParamTarget | null = useMemo(() => {
     if (!enabled) return null;
 
     // Find Active Segment
@@ -137,7 +137,13 @@ export function useTimelineController({
     // Resolve From values
     const prevSegment = segmentIndex > 0 ? K1_HERO_TIMELINE[segmentIndex - 1] : null;
 
-    const targetParams: TimelineParamTarget = {};
+    const targetParams: Record<
+      keyof TimelineParamTarget,
+      TimelineParamTarget[keyof TimelineParamTarget] | undefined
+    > = {} as Record<
+      keyof TimelineParamTarget,
+      TimelineParamTarget[keyof TimelineParamTarget] | undefined
+    >;
     const keys = Object.keys(activeSegment.to) as (keyof TimelineParamTarget)[];
 
     keys.forEach((key) => {
@@ -186,7 +192,7 @@ export function useTimelineController({
       }
     });
 
-    return targetParams;
+    return targetParams as TimelineParamTarget;
   }, [currentTime, enabled, manualVisuals, manualOptics, manualPhysics, manualDiagnostics]);
 
   // --- 3. MERGE & OUTPUT ---
