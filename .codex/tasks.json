@@ -1,0 +1,26 @@
+{
+  "tasks": [
+    {
+      "prompt": "Work inside \"/Users/spectrasynq/SpectraSynq.LandingPage/apps/web-main\". Run `npm run build` and summarize results (errors, warnings), propose fixes.",
+      "role": "analyst",
+      "policy": "workspace-write",
+      "label": "Build Check",
+      "outputLast": "/tmp/spectra-build-last.txt",
+      "wait": true
+    },
+    {
+      "prompt": "Work inside \"/Users/spectrasynq/SpectraSynq.LandingPage/apps/web-main\". Run `npm run lint`, summarize violations, propose autofixes and configuration adjustments.",
+      "role": "analyst",
+      "policy": "workspace-write",
+      "label": "Lint Review",
+      "outputLast": "/tmp/spectra-lint-last.txt"
+    },
+    {
+      "prompt": "Work inside \"/Users/spectrasynq/SpectraSynq.LandingPage/apps/web-main\". Audit landing page copy for clarity and actionability. Suggest concise improvements.",
+      "role": "reviewer",
+      "policy": "read-only",
+      "label": "Copy Audit",
+      "outputLast": "/tmp/spectra-copy-last.txt"
+    }
+  ]
+}

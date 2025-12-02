@@ -1,0 +1,2 @@
+Continue in "/Users/spectrasynq/SpectraSynq.LandingPage/apps/web-main".
+Apply safe fixes or propose a patch diff. Summarize changes and TODOs.

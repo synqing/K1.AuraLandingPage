@@ -188,6 +188,7 @@ export function useK1Physics(params: PhysicsParams) {
           top[dst + 3] = field[src + 3];
         }
       } else if (params.diagnosticMode === 'TOP_ONLY') {
+        addColor(field, center - 1, 1, 1, 1, 1.0);
         addColor(field, center, 1, 1, 1, 1.0);
         for (let i = 0; i < LED_COUNT; i++) {
           const src = i * LED_STRIDE;
@@ -198,9 +199,11 @@ export function useK1Physics(params: PhysicsParams) {
           top[dst + 3] = field[src + 3];
         }
       } else if (params.diagnosticMode === 'BOTTOM_ONLY') {
+        addColor(field, center - 1, 1, 1, 1, 1.0);
         addColor(field, center, 1, 1, 1, 1.0);
         bottom.set(field);
       } else if (params.diagnosticMode === 'COLLISION') {
+        addColor(field, center - 1, 1, 1, 1, 1.0);
         addColor(field, center, 1, 1, 1, 1.0);
         bottom.set(field);
         for (let i = 0; i < LED_COUNT; i++) {
@@ -229,10 +232,14 @@ export function useK1Physics(params: PhysicsParams) {
     const col = hsvToRgb(s.huePos, 1.0, 1.0);
     if (trigger > 0) {
       const center = Math.floor(LED_COUNT / 2);
-      let pos = center;
-      if (params.motionMode === 'Left Origin') pos = 0;
-      else if (params.motionMode === 'Right Origin') pos = LED_COUNT - 1;
-      addColor(field, pos, col.r, col.g, col.b, trigger * 2.0);
+      if (params.motionMode === 'Center Origin') {
+        addColor(field, center - 1, col.r, col.g, col.b, trigger * 2.0);
+        addColor(field, center, col.r, col.g, col.b, trigger * 2.0);
+      } else if (params.motionMode === 'Left Origin') {
+        addColor(field, 0, col.r, col.g, col.b, trigger * 2.0);
+      } else {
+        addColor(field, LED_COUNT - 1, col.r, col.g, col.b, trigger * 2.0);
+      }
     }
 
     const bottom = s.bottomBuf;
