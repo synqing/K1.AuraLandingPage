@@ -30,6 +30,9 @@ export const K1_HERO_PRESET = {
     columnBoostExponent: 1.2,
     edgeHotspotStrength: 5.0,
     edgeHotspotWidth: 0.1,
+    railInner: 0.2,
+    railOuter: 0.45,
+    railSigma: 1.0,
   },
   physics: {
     motionMode: 'Center Origin',
@@ -69,6 +72,10 @@ export const K1Engine: React.FC<K1EngineProps> = ({ compositorRect }) => {
       spread: { value: 0.015, render: () => false },
     }),
     Optics: folder({
+      syncTopBottomOptics: {
+        value: true,
+        label: 'Sync top/bottom',
+      },
       topSpreadNear: {
         value: K1_HERO_PRESET.optics.topSpreadNear,
         min: 0.0,
@@ -94,6 +101,9 @@ export const K1Engine: React.FC<K1EngineProps> = ({ compositorRect }) => {
       columnBoostExponent: { value: K1_HERO_PRESET.optics.columnBoostExponent, min: 0.5, max: 3.0 },
       edgeHotspotStrength: { value: K1_HERO_PRESET.optics.edgeHotspotStrength, min: 0.0, max: 5.0 },
       edgeHotspotWidth: { value: K1_HERO_PRESET.optics.edgeHotspotWidth, min: 0.0, max: 0.25 },
+      railInner: { value: K1_HERO_PRESET.optics.railInner, min: 0.0, max: 0.5, step: 0.001 },
+      railOuter: { value: K1_HERO_PRESET.optics.railOuter, min: 0.0, max: 0.5, step: 0.001 },
+      railSigma: { value: K1_HERO_PRESET.optics.railSigma, min: 0.5, max: 5.0, step: 0.01 },
     }),
     Physics: folder({
       motionMode: {
@@ -199,6 +209,9 @@ export const K1Engine: React.FC<K1EngineProps> = ({ compositorRect }) => {
       uColumnBoostExponent: { value: params.columnBoostExponent },
       uEdgeHotspotStrength: { value: params.edgeHotspotStrength },
       uEdgeHotspotWidth: { value: params.edgeHotspotWidth },
+      uRailInner: { value: K1_HERO_PRESET.optics.railInner },
+      uRailOuter: { value: K1_HERO_PRESET.optics.railOuter },
+      uRailSigma: { value: K1_HERO_PRESET.optics.railSigma },
     }),
     [] // Create once on mount
   );
@@ -217,15 +230,27 @@ export const K1Engine: React.FC<K1EngineProps> = ({ compositorRect }) => {
 
   // Optics (Manual tuning)
   uniformsRef.current.uTopFalloff.value = params.topFalloff;
-  uniformsRef.current.uBottomFalloff.value = params.bottomFalloff;
+  const effectiveBottomSpreadNear = params.syncTopBottomOptics
+    ? params.topSpreadNear
+    : params.bottomSpreadNear;
+  const effectiveBottomSpreadFar = params.syncTopBottomOptics
+    ? params.topSpreadFar
+    : params.bottomSpreadFar;
+  const effectiveBottomFalloff = params.syncTopBottomOptics
+    ? params.topFalloff
+    : params.bottomFalloff;
+  uniformsRef.current.uBottomFalloff.value = effectiveBottomFalloff;
   uniformsRef.current.uTopSpreadNear.value = params.topSpreadNear;
   uniformsRef.current.uTopSpreadFar.value = params.topSpreadFar;
-  uniformsRef.current.uBottomSpreadNear.value = params.bottomSpreadNear;
-  uniformsRef.current.uBottomSpreadFar.value = params.bottomSpreadFar;
+  uniformsRef.current.uBottomSpreadNear.value = effectiveBottomSpreadNear;
+  uniformsRef.current.uBottomSpreadFar.value = effectiveBottomSpreadFar;
   uniformsRef.current.uColumnBoostStrength.value = params.columnBoostStrength;
   uniformsRef.current.uColumnBoostExponent.value = params.columnBoostExponent;
   uniformsRef.current.uEdgeHotspotStrength.value = params.edgeHotspotStrength;
   uniformsRef.current.uEdgeHotspotWidth.value = params.edgeHotspotWidth;
+  uniformsRef.current.uRailInner.value = params.railInner ?? K1_HERO_PRESET.optics.railInner;
+  uniformsRef.current.uRailOuter.value = params.railOuter ?? K1_HERO_PRESET.optics.railOuter;
+  uniformsRef.current.uRailSigma.value = params.railSigma ?? K1_HERO_PRESET.optics.railSigma;
 
   return (
     <>

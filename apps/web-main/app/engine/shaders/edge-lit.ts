@@ -29,6 +29,9 @@ export const edgeLitShader = {
     // Optics: Mechanical
     uniform float uEdgeHotspotStrength;
     uniform float uEdgeHotspotWidth;
+    uniform float uRailInner;
+    uniform float uRailOuter;
+    uniform float uRailSigma;
 
     varying vec2 vUv;
 
@@ -68,29 +71,19 @@ export const edgeLitShader = {
       vec3 columnEffect = boostedInteraction * midPlateMask;
 
       // --- 5. EDGE HOTSPOTS (Mechanical Cutouts) ---
-      // Corner wedge model: horizontal edge × vertical rail lobes
-      float x = vUv.x;
-      float y = vUv.y;
-      
-      // Horizontal: near edges strong, center weak
-      float distX = min(x, 1.0 - x);
-      float edgeX = smoothstep(uEdgeHotspotWidth, 0.0, distX);
-      
-      // Vertical: two Gaussian lobes near rails (top and bottom), fading toward mid-height
-      float sigmaY = 0.15;
-      float topLobe = exp(-pow((y - 1.0) / sigmaY, 2.0));
-      float bottomLobe = exp(-pow((y - 0.0) / sigmaY, 2.0));
-      float railY = max(topLobe, bottomLobe);
-      
-      // Final corner mask and boost applied multiplicatively on current colors
-      float cornerMask = edgeX * railY;
-      vec3 hotspotBoost = (colorBottom + colorTop) * cornerMask * uEdgeHotspotStrength;
+      vec2 uv = vUv;
+      float edgeDist = min(uv.x, 1.0 - uv.x);
+      float edgeMask = 1.0 - smoothstep(0.0, uEdgeHotspotWidth, edgeDist);
+      float distFromMid = abs(uv.y - 0.5);
+      float railMask = pow(smoothstep(uRailInner, uRailOuter, distFromMid), uRailSigma);
+      float cornerMask = edgeMask * railMask;
 
       // --- 6. COMPOSITION ---
       vec3 finalColor = (colorBottom * bottomInfluence) + 
                         (colorTop * topInfluence) + 
-                        columnEffect +
-                        hotspotBoost;
+                        columnEffect;
+      vec3 hotspotBoost = finalColor * cornerMask * uEdgeHotspotStrength;
+      finalColor += hotspotBoost;
 
       // --- 7. TONEMAPPING & OUTPUT ---
       vec3 outColor = finalColor + uBaseLevel;
