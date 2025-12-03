@@ -24,19 +24,22 @@
 
 import React, { useMemo } from 'react';
 import { useControls, folder } from 'leva';
-import { useK1Physics, DiagnosticMode } from './useK1Physics';
+import { useK1Physics } from './useK1Physics';
+import type { DiagnosticMode, MotionMode } from './useK1Physics';
 import { useTimelineController } from './timeline/useTimelineController';
 import { TIMELINE_DURATION } from './timeline/sequence';
 import { K1CoreScene } from '@/app/k1/core/view/K1CoreScene';
-import { K1_HERO_V1, K1_PHYSICAL_V1 } from '@/app/k1/core/optics/presets';
+import { K1_HERO_V1, K1_HERO_V2, K1_PHYSICAL_V1 } from '@/app/k1/core/optics/presets';
 
 // --- PRESET DEFINITIONS ---
-export const K1_HERO_PRESET = K1_HERO_V1;
+// K1_HERO_V2 is the new canonical hero: "Fluid columns with ribs in magenta-cyan glass"
+export const K1_HERO_PRESET = K1_HERO_V2;
 export const K1_PHYSICAL_PRESET = K1_PHYSICAL_V1;
 
-// Preset lookup map
+// Preset lookup map - includes V1 for A/B comparison
 const PRESETS = {
   K1_HERO_V1,
+  K1_HERO_V2,
   K1_PHYSICAL_V1,
 } as const;
 
@@ -136,10 +139,10 @@ export const K1Engine: React.FC<K1EngineProps> = ({
     // ═══════════════════════════════════════════════════════════════════════════
     Physics: folder({
       motionMode: {
-        // ⚠️ CENTER ORIGIN MANDATE: Default MUST be 'Center Origin'
-        // Left/Right options exist for legacy/debug only - DO NOT USE IN PRODUCTION
-        options: ['Center Origin', 'Left Origin', 'Right Origin'],
-        value: K1_HERO_PRESET.physics.motionMode, // Defaults to 'Center Origin'
+        // ⚠️ CENTER ORIGIN MANDATE: Only 'Center Origin' is permitted
+        // Left/Right Origin options have been REMOVED - they violate the mandate
+        options: ['Center Origin'] as const,
+        value: 'Center Origin',
       },
       simulationSpeed: { value: K1_HERO_PRESET.physics.simulationSpeed, min: 0.1, max: 5.0 },
       decay: { value: K1_HERO_PRESET.physics.decay, min: 0.01, max: 0.5 },
@@ -202,7 +205,8 @@ export const K1Engine: React.FC<K1EngineProps> = ({
     simulationSpeed: effectivePhysics.simulationSpeed,
     decay: effectivePhysics.decay,
     ghostAudio: effectivePhysics.ghostAudio,
-    motionMode: effectivePhysics.motionMode,
+    // CENTER ORIGIN MANDATE: Cast to literal type - value is always 'Center Origin'
+    motionMode: effectivePhysics.motionMode as MotionMode,
     diagnosticMode: effectiveDiagnostics.diagnosticMode as DiagnosticMode,
     heroMode: params.heroMode,
     mode: params.mode as 'Existing' | 'Snapwave',

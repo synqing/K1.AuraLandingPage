@@ -1,7 +1,20 @@
 #!/usr/bin/env node
-/*
- * Visual regression capture (manual targets for now).
- * Starts a dev server, loads canonical scenes, saves PNGs to tests/golden/manual.
+/**
+ * ╔═══════════════════════════════════════════════════════════════════════════╗
+ * ║                K1 VISUAL REGRESSION - CENTER ORIGIN VALIDATION             ║
+ * ╠═══════════════════════════════════════════════════════════════════════════╣
+ * ║                                                                           ║
+ * ║  This script captures golden frames from all K1 visualization routes      ║
+ * ║  to validate CENTER ORIGIN MANDATE compliance.                            ║
+ * ║                                                                           ║
+ * ║  ROUTES TESTED:                                                           ║
+ * ║  - /           : Landing page with K1Engine (HERO preset)                 ║
+ * ║  - /simulator  : Physics simulator with K1Engine (PHYSICAL preset)        ║
+ * ║                                                                           ║
+ * ║  EXPECTED VISUAL:                                                         ║
+ * ║  All routes should show SYMMETRIC LIGHT FROM CENTER, never at edges.      ║
+ * ║                                                                           ║
+ * ╚═══════════════════════════════════════════════════════════════════════════╝
  */
 
 const path = require('path');
@@ -12,25 +25,38 @@ let chromium;
 try {
   ({ chromium } = require('playwright'));
 } catch (err) {
-  console.error('[visual-regression] playwright is not installed. Install with `npm install -D playwright` and rerun.');
+  console.error(
+    '[visual-regression] playwright is not installed. Install with `npm install -D playwright` and rerun.'
+  );
   process.exit(1);
 }
 
 const DEV_PORT = 3100;
 const DEV_URL = `http://127.0.0.1:${DEV_PORT}`;
 
+// Golden frame output directory
+const GOLDEN_DIR = path.join('tests', 'golden', 'center-origin');
+
+/**
+ * Shots to capture - ALL K1 visualization routes
+ * Each shot validates that center-origin mandate is visually correct
+ */
 const shots = [
   {
+    name: 'landing-hero',
     url: `${DEV_URL}/`,
-    file: path.join('tests', 'golden', 'manual', 'K1Engine', 'hero', 'frame_0500.png'),
-    settleMs: 1600,
+    file: path.join(GOLDEN_DIR, 'landing-hero.png'),
+    settleMs: 2000, // Allow physics to run and show symmetric light
     selector: 'canvas',
+    description: 'Landing page with HERO preset - symmetric light from center',
   },
   {
+    name: 'simulator-physical',
     url: `${DEV_URL}/simulator`,
-    file: path.join('tests', 'golden', 'manual', 'K1Simulation', 'physical', 'frame_0500.png'),
-    settleMs: 1600,
+    file: path.join(GOLDEN_DIR, 'simulator-physical.png'),
+    settleMs: 2000,
     selector: 'canvas',
+    description: 'Simulator with PHYSICAL preset - symmetric light from center',
   },
 ];
 
@@ -49,15 +75,12 @@ async function waitForServer(url, timeoutMs = 60000) {
 }
 
 async function ensureDirs() {
-  const dirs = [
-    path.join('tests', 'golden', 'manual', 'K1Engine', 'hero'),
-    path.join('tests', 'golden', 'manual', 'K1Simulation', 'physical'),
-  ];
-  dirs.forEach((d) => fs.mkdirSync(d, { recursive: true }));
+  fs.mkdirSync(GOLDEN_DIR, { recursive: true });
+  console.log(`[visual-regression] Golden frames will be saved to: ${GOLDEN_DIR}`);
 }
 
 async function startDevServer() {
-  console.log('[visual-regression] starting dev server on port', DEV_PORT);
+  console.log('[visual-regression] Starting dev server on port', DEV_PORT);
   const proc = spawn(
     'npm',
     ['run', 'dev', '--workspace=apps/web-main', '--', '--hostname', '127.0.0.1', '--port', String(DEV_PORT)],
@@ -68,33 +91,61 @@ async function startDevServer() {
 
 async function stopDevServer(proc) {
   if (!proc) return;
-  console.log('[visual-regression] stopping dev server');
+  console.log('[visual-regression] Stopping dev server');
   proc.kill('SIGINT');
 }
 
 async function main() {
+  console.log('');
+  console.log('═══════════════════════════════════════════════════════════════════════════');
+  console.log('  K1 VISUAL REGRESSION - CENTER ORIGIN VALIDATION');
+  console.log('═══════════════════════════════════════════════════════════════════════════');
+  console.log('');
+
   await ensureDirs();
 
   const devProc = await startDevServer();
   await waitForServer(DEV_URL);
+  console.log('[visual-regression] Dev server ready');
 
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
 
+  console.log('');
+  console.log('Capturing golden frames...');
+  console.log('');
+
   for (const shot of shots) {
-    console.log('[visual-regression] capturing', shot.url, '->', shot.file);
+    console.log(`  [${shot.name}] ${shot.description}`);
+    console.log(`    URL: ${shot.url}`);
+    console.log(`    File: ${shot.file}`);
+
     await page.goto(shot.url);
     await page.waitForTimeout(shot.settleMs);
+
     const target = shot.selector ? await page.waitForSelector(shot.selector) : null;
     if (target) {
       await target.screenshot({ path: shot.file });
     } else {
       await page.screenshot({ path: shot.file, fullPage: true });
     }
+
+    console.log(`    ✓ Captured`);
+    console.log('');
   }
 
   await browser.close();
   await stopDevServer(devProc);
+
+  console.log('═══════════════════════════════════════════════════════════════════════════');
+  console.log('  GOLDEN FRAMES CAPTURED SUCCESSFULLY');
+  console.log('');
+  console.log('  MANUAL VERIFICATION REQUIRED:');
+  console.log('  Open each PNG and verify light emanates SYMMETRICALLY from CENTER.');
+  console.log('');
+  console.log('  EXPECTED: Symmetric columns of light from center');
+  console.log('  WRONG: Light blobs at edges or asymmetric positions');
+  console.log('═══════════════════════════════════════════════════════════════════════════');
 }
 
 main().catch((err) => {

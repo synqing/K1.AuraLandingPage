@@ -38,11 +38,23 @@ const LED_STRIDE = 4;
 
 export type DiagnosticMode = 'NONE' | 'TOP_ONLY' | 'BOTTOM_ONLY' | 'COLLISION' | 'EDGES_ONLY';
 
+/**
+ * MotionMode type - CENTER ORIGIN MANDATE
+ *
+ * This is a LITERAL TYPE that only allows 'Center Origin'.
+ * Any attempt to use 'Left Origin' or 'Right Origin' will cause a TypeScript compile error.
+ *
+ * PROHIBITED VALUES (will not compile):
+ *   motionMode: 'Left Origin'   // ❌ Type error
+ *   motionMode: 'Right Origin'  // ❌ Type error
+ */
+export type MotionMode = 'Center Origin';
+
 interface PhysicsParams {
   simulationSpeed: number;
   decay: number;
   ghostAudio: boolean;
-  motionMode: string;
+  motionMode: MotionMode;
   diagnosticMode: DiagnosticMode;
   heroMode?: boolean;
   heroLoopDuration?: number;
@@ -204,6 +216,19 @@ export function useK1Physics(params: PhysicsParams) {
   };
 
   useFrame((_state, delta) => {
+    // ═══════════════════════════════════════════════════════════════════════════
+    // RUNTIME ASSERTION: CENTER ORIGIN MANDATE
+    // This is a non-mutating guard. If violated, we warn but don't crash.
+    // The TypeScript type should prevent this at compile time, but this catches
+    // runtime scenarios (e.g., dynamic values, serialized state).
+    // ═══════════════════════════════════════════════════════════════════════════
+    if (params.motionMode !== 'Center Origin') {
+      console.error(
+        `[K1Physics] CENTER ORIGIN VIOLATION: motionMode="${params.motionMode}" is not permitted. ` +
+          `Only "Center Origin" is allowed. This will cause visual regressions.`
+      );
+    }
+
     const dt = delta * params.simulationSpeed;
     const s = physicsState.current;
     s.time += dt;

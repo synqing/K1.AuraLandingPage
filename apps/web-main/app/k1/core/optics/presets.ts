@@ -111,3 +111,66 @@ export const K1_HERO_V1 = {
     ghostAudio: true,
   },
 };
+
+/**
+ * K1_HERO_V2 - Fluid Columns Hero (Landing Page Target)
+ *
+ * Design target: "Symmetric breathing columns from center, with visible ribs
+ * and subtle rails in a magenta-cyan glass slab. Physical but cinematic."
+ *
+ * Built from K1_PHYSICAL_V1 foundations with:
+ * - Tighter spreads + steeper falloff → sharper columns
+ * - Stronger columnBoost → visible ribs
+ * - Moderate edgeHotspot → glassy edges without blobs
+ * - Magenta tint + slow autoColorShift → coherent hero palette
+ *
+ * VERSION: Starting tuning values - expect iteration
+ */
+export const K1_HERO_V2 = {
+  opticsMode: 'HERO' as const,
+  visuals: {
+    // Higher base glow than PHYSICAL for richer glass feel
+    exposure: 1.3, // Punch columns without clipping (was 4.0)
+    baseLevel: 0.06, // Slight ambient glow (was 0.0)
+    tint: '#ff66e6', // Magenta bias
+    hueOffset: 0.0,
+    autoColorShift: true, // Slow rotation around magenta-cyan axis
+  },
+  optics: {
+    // Spread: tighter than K1_HERO_V1, you see stronger ribs
+    topSpreadNear: 0.012, // Tighter than PHYSICAL (0.015)
+    topSpreadFar: 0.02,
+    bottomSpreadNear: 0.012,
+    bottomSpreadFar: 0.02,
+
+    // Falloff: steeper than PHYSICAL → more column contrast
+    topFalloff: 1.6, // PHYSICAL is 1.5
+    bottomFalloff: 1.6,
+
+    // Column boost: sharper "veins" without aliasing
+    columnBoostStrength: 0.4, // Up from 0.0 (PHYSICAL)
+    columnBoostExponent: 1.8, // >1 for steeper "ribbed" look
+
+    // Edge hotspots: glass catching light, not LED globs
+    edgeHotspotStrength: 0.3, // Much lower than K1_HERO_V1 (5.0)
+    edgeHotspotWidth: 0.06,
+
+    // Rails: subtle structure lanes
+    railInner: 0.35, // Where rails start from center
+    railOuter: 0.7, // Where they fade
+    railSigma: 0.18, // Soft rail spread
+
+    // Prism: disabled until deliberately introduced
+    prismCount: 0,
+    prismOpacity: 0.0,
+  },
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PHYSICS - CENTER ORIGIN MANDATE: motionMode MUST be 'Center Origin'
+  // ═══════════════════════════════════════════════════════════════════════════
+  physics: {
+    motionMode: 'Center Origin', // ⚠️ MANDATORY
+    simulationSpeed: 1.0,
+    decay: 0.16, // Slightly snappier than PHYSICAL (0.15)
+    ghostAudio: true,
+  },
+};

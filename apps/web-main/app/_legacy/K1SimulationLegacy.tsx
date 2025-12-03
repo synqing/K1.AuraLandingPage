@@ -1,20 +1,31 @@
 'use client';
 
 /**
- * @deprecated LEGACY MONOLITHIC SIMULATION
+ * ╔═══════════════════════════════════════════════════════════════════════════╗
+ * ║                                                                           ║
+ * ║   ⚠️⚠️⚠️  LEGACY CODE - DO NOT USE - DO NOT MODIFY  ⚠️⚠️⚠️                  ║
+ * ║                                                                           ║
+ * ╠═══════════════════════════════════════════════════════════════════════════╣
+ * ║                                                                           ║
+ * ║   This file has been QUARANTINED. It is kept ONLY for historical         ║
+ * ║   reference. DO NOT import this component anywhere.                       ║
+ * ║                                                                           ║
+ * ║   REPLACEMENT: Use K1Engine from '@/app/engine/K1Engine'                  ║
+ * ║                                                                           ║
+ * ║   Migration:                                                              ║
+ * ║   - PHYSICAL mode: <K1Engine visualPreset="K1_PHYSICAL_V1" />             ║
+ * ║   - HERO mode: <K1Engine visualPreset="K1_HERO_V1" /> (or <K1Engine />)   ║
+ * ║                                                                           ║
+ * ║   WHY QUARANTINED:                                                        ║
+ * ║   - This monolithic simulation does NOT comply with the unified engine    ║
+ * ║   - It allows motionMode overrides that violate CENTER ORIGIN MANDATE     ║
+ * ║   - It lacks the Visual Layer System (VLS) compositor architecture        ║
+ * ║                                                                           ║
+ * ║   If you need simulation features, add them to the K1Engine instead.      ║
+ * ║                                                                           ║
+ * ╚═══════════════════════════════════════════════════════════════════════════╝
  *
- * This file is DEPRECATED and kept only for reference/backup.
- * Use K1Engine from '@/app/engine/K1Engine' instead.
- *
- * Migration:
- * - For PHYSICAL mode: <K1Engine visualPreset="K1_PHYSICAL_V1" />
- * - For HERO mode: <K1Engine visualPreset="K1_HERO_V1" /> (or just <K1Engine />)
- *
- * This monolithic version has been superseded by the unified engine architecture
- * which supports multiple optics modes (HERO, PHYSICAL, EXPERIMENTAL) through
- * a single codebase.
- *
- * DO NOT USE IN NEW CODE.
+ * @deprecated LEGACY MONOLITHIC SIMULATION - Use K1Engine instead
  */
 
 import React, { useRef, useMemo } from 'react';

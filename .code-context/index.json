@@ -1,0 +1,90 @@
+{
+  "timestamp": "2025-12-03T17:04:01.859Z",
+  "projectRoot": "/Users/spectrasynq/SpectraSynq.LandingPage",
+  "projectName": "SpectraSynq.LandingPage",
+  "fileCount": 100,
+  "embeddingModel": "nomic-embed-text",
+  "embeddinProvider": "ollama",
+  "files": [
+    {
+      "path": "/tools/visual-regression/capture.js",
+      "size": 6515
+    },
+    {
+      "path": "/tools/visual-regression/test-center-origin.spec.ts",
+      "size": 4728
+    },
+    {
+      "path": "/_prototypes/K1.Visualisation/vis-lab/page.tsx",
+      "size": 4236
+    },
+    {
+      "path": "/_prototypes/K1.Visualisation/K1.Visualisation.original/simulator/K1SimulationUnified.tsx",
+      "size": 10726
+    },
+    {
+      "path": "/_prototypes/K1.Visualisation/K1.Visualisation.original/simulator/K1SimulationReference.tsx",
+      "size": 11345
+    },
+    {
+      "path": "/_prototypes/K1.Visualisation/K1.Visualisation.original/simulator/page.tsx",
+      "size": 2838
+    },
+    {
+      "path": "/_prototypes/K1.Visualisation/K1.Visualisation.original/engine/useK1Physics.ts",
+      "size": 10215
+    },
+    {
+      "path": "/_prototypes/K1.Visualisation/K1.Visualisation.original/engine/LayerManager.ts",
+      "size": 1367
+    },
+    {
+      "path": "/_prototypes/K1.Visualisation/K1.Visualisation.original/engine/types.ts",
+      "size": 972
+    },
+    {
+      "path": "/_prototypes/K1.Visualisation/K1.Visualisation.original/engine/components/Compositor.tsx",
+      "size": 2180
+    },
+    {
+      "path": "/_prototypes/K1.Visualisation/K1.Visualisation.original/engine/components/VisualLayer.tsx",
+      "size": 1959
+    },
+    {
+      "path": "/_prototypes/K1.Visualisation/K1.Visualisation.original/engine/components/Debug/DebugOverlay.tsx",
+      "size": 2310
+    },
+    {
+      "path": "/_prototypes/K1.Visualisation/K1.Visualisation.original/engine/K1Engine.tsx",
+      "size": 9811
+    },
+    {
+      "path": "/_prototypes/K1.Visualisation/K1.Visualisation.original/engine/k1/core/view/K1CoreScene.tsx",
+      "size": 5355
+    },
+    {
+      "path": "/_prototypes/K1.Visualisation/K1.Visualisation.original/engine/k1/core/optics/edgeLitShader.ts",
+      "size": 4026
+    },
+    {
+      "path": "/_prototypes/K1.Visualisation/K1.Visualisation.original/engine/k1/core/optics/presets.ts",
+      "size": 1997
+    },
+    {
+      "path": "/_prototypes/K1.Visualisation/K1.Visualisation.original/engine/shaders/edge-lit.ts",
+      "size": 133
+    },
+    {
+      "path": "/_prototypes/K1.Visualisation/K1.Visualisation.original/engine/shaders/common.ts",
+      "size": 1207
+    },
+    {
+      "path": "/_prototypes/K1.Visualisation/K1.Visualisation.original/engine/presets.ts",
+      "size": 89
+    },
+    {
+      "path": "/_prototypes/K1.Visualisation/K1.Visualisation.original/engine/timeline/useTimelineController.ts",
+      "size": 10378
+    }
+  ]
+}
