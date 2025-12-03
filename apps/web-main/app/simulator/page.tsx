@@ -2,7 +2,8 @@
 
 import React, { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { EffectComposer, Bloom } from '@react-three/postprocessing';
+// EffectComposer disabled - interferes with VLS compositor
+// import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import { K1Engine } from '../engine/K1Engine';
 import { Leva } from 'leva';
 
@@ -42,24 +43,20 @@ export default function SimulatorPage() {
               toneMapping: 3,
               toneMappingExposure: 1.2,
               preserveDrawingBuffer: true,
+              autoClear: false,
             }}
             camera={{ position: [0, 2, 35], fov: 45 }}
             dpr={[1, 1.5]}
           >
-            <color attach="background" args={['#000000']} />
-
             <Suspense fallback={null}>
-              <K1Engine />
-
-              <mesh position={[0, -7, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-                <planeGeometry args={[120, 120]} />
-                <meshBasicMaterial color="#030303" />
-              </mesh>
+              <K1Engine compositorRect={{ offset: [0, 0], scale: [1, 1] }} />
             </Suspense>
 
+            {/* EffectComposer disabled - interferes with VLS compositor
             <EffectComposer enableNormalPass={false}>
               <Bloom luminanceThreshold={0.1} mipmapBlur intensity={1.2} radius={0.6} />
             </EffectComposer>
+            */}
           </Canvas>
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
         </div>

@@ -14,6 +14,8 @@ interface UseTimelineControllerProps {
     spread: number;
     baseLevel: number;
     tint: string;
+    hueOffset?: number;
+    autoColorShift?: boolean;
   };
   manualOptics: {
     topSpreadNear: number;
@@ -26,6 +28,11 @@ interface UseTimelineControllerProps {
     columnBoostExponent: number;
     edgeHotspotStrength: number;
     edgeHotspotWidth: number;
+    prismCount?: number;
+    prismOpacity?: number;
+    railInner: number;
+    railOuter: number;
+    railSigma: number;
   };
   manualPhysics: {
     motionMode: string;
@@ -212,6 +219,10 @@ export function useTimelineController({
     if (interpolatedParams.baseLevel !== undefined)
       effectiveVisuals.baseLevel = interpolatedParams.baseLevel;
     if (interpolatedParams.tint !== undefined) effectiveVisuals.tint = interpolatedParams.tint;
+    if (interpolatedParams.hueOffset !== undefined)
+      effectiveVisuals.hueOffset = interpolatedParams.hueOffset;
+    if (interpolatedParams.autoColorShift !== undefined)
+      effectiveVisuals.autoColorShift = interpolatedParams.autoColorShift;
 
     // Optics
     if (interpolatedParams.topSpreadNear !== undefined)
@@ -234,6 +245,16 @@ export function useTimelineController({
       effectiveOptics.edgeHotspotStrength = interpolatedParams.edgeHotspotStrength;
     if (interpolatedParams.edgeHotspotWidth !== undefined)
       effectiveOptics.edgeHotspotWidth = interpolatedParams.edgeHotspotWidth;
+    if (interpolatedParams.prismCount !== undefined)
+      effectiveOptics.prismCount = interpolatedParams.prismCount;
+    if (interpolatedParams.prismOpacity !== undefined)
+      effectiveOptics.prismOpacity = interpolatedParams.prismOpacity;
+    if (interpolatedParams.railInner !== undefined)
+      effectiveOptics.railInner = interpolatedParams.railInner;
+    if (interpolatedParams.railOuter !== undefined)
+      effectiveOptics.railOuter = interpolatedParams.railOuter;
+    if (interpolatedParams.railSigma !== undefined)
+      effectiveOptics.railSigma = interpolatedParams.railSigma;
 
     // Physics
     if (interpolatedParams.motionMode !== undefined)

@@ -1,5 +1,22 @@
 'use client';
 
+/**
+ * @deprecated LEGACY MONOLITHIC SIMULATION
+ *
+ * This file is DEPRECATED and kept only for reference/backup.
+ * Use K1Engine from '@/app/engine/K1Engine' instead.
+ *
+ * Migration:
+ * - For PHYSICAL mode: <K1Engine visualPreset="K1_PHYSICAL_V1" />
+ * - For HERO mode: <K1Engine visualPreset="K1_HERO_V1" /> (or just <K1Engine />)
+ *
+ * This monolithic version has been superseded by the unified engine architecture
+ * which supports multiple optics modes (HERO, PHYSICAL, EXPERIMENTAL) through
+ * a single codebase.
+ *
+ * DO NOT USE IN NEW CODE.
+ */
+
 import React, { useRef, useMemo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';

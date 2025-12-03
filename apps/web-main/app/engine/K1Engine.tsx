@@ -1,52 +1,64 @@
+/**
+ * ╔═══════════════════════════════════════════════════════════════════════════╗
+ * ║                      K1 ENGINE - CENTER ORIGIN MANDATE                     ║
+ * ╠═══════════════════════════════════════════════════════════════════════════╣
+ * ║                                                                           ║
+ * ║  ⚠️  CRITICAL: This engine MUST maintain Center Origin at all times  ⚠️    ║
+ * ║                                                                           ║
+ * ║  The K1Engine orchestrates physics, optics, and rendering. The CENTER     ║
+ * ║  ORIGIN MANDATE requires that all light injection be symmetric from       ║
+ * ║  the center of the LED strip.                                             ║
+ * ║                                                                           ║
+ * ║  KEY CONSTRAINTS:                                                         ║
+ * ║  1. motionMode Leva control defaults to 'Center Origin'                   ║
+ * ║  2. Timeline MUST NOT change motionMode to Left/Right Origin              ║
+ * ║  3. Physics hook receives motionMode and MUST respect it                  ║
+ * ║                                                                           ║
+ * ║  VISUAL VALIDATION: Light should always appear as symmetric columns       ║
+ * ║  from the center, never at edges or asymmetric positions.                 ║
+ * ║                                                                           ║
+ * ╚═══════════════════════════════════════════════════════════════════════════╝
+ */
+
 'use client';
 
-import React, { useEffect, useMemo, useRef } from 'react';
-import * as THREE from 'three';
+import React, { useMemo } from 'react';
 import { useControls, folder } from 'leva';
 import { useK1Physics, DiagnosticMode } from './useK1Physics';
-import { useLayerManager } from './LayerManager';
-import { VisualLayer } from './components/VisualLayer';
-import { Compositor } from './components/Compositor';
-import { DebugOverlay } from './components/Debug/DebugOverlay';
-import { edgeLitShader } from './shaders/edge-lit';
 import { useTimelineController } from './timeline/useTimelineController';
 import { TIMELINE_DURATION } from './timeline/sequence';
+import { K1CoreScene } from '@/app/k1/core/view/K1CoreScene';
+import { K1_HERO_V1, K1_PHYSICAL_V1 } from '@/app/k1/core/optics/presets';
 
-// --- HERO PRESET DEFINITION ---
-export const K1_HERO_PRESET = {
-  visuals: {
-    exposure: 4.0,
-    baseLevel: 0.0,
-    tint: '#ffffff',
-  },
-  optics: {
-    topSpreadNear: 0.0706,
-    topSpreadFar: 0.0539,
-    bottomSpreadNear: 0.0706,
-    bottomSpreadFar: 0.0539,
-    topFalloff: 2.61,
-    bottomFalloff: 2.61,
-    columnBoostStrength: 0.0,
-    columnBoostExponent: 1.2,
-    edgeHotspotStrength: 5.0,
-    edgeHotspotWidth: 0.1,
-  },
-  physics: {
-    motionMode: 'Center Origin',
-    simulationSpeed: 1.0,
-    decay: 0.15,
-    ghostAudio: true,
-  },
-};
+// --- PRESET DEFINITIONS ---
+export const K1_HERO_PRESET = K1_HERO_V1;
+export const K1_PHYSICAL_PRESET = K1_PHYSICAL_V1;
+
+// Preset lookup map
+const PRESETS = {
+  K1_HERO_V1,
+  K1_PHYSICAL_V1,
+} as const;
+
+type PresetName = keyof typeof PRESETS;
+type OpticsMode = 'HERO' | 'PHYSICAL' | 'EXPERIMENTAL';
 
 type K1EngineProps = {
   compositorRect?: {
     offset: [number, number];
     scale: [number, number];
   };
+  /** Override the default preset (defaults to K1_HERO_V1) */
+  visualPreset?: PresetName;
 };
 
-export const K1Engine: React.FC<K1EngineProps> = ({ compositorRect }) => {
+export const K1Engine: React.FC<K1EngineProps> = ({
+  compositorRect,
+  visualPreset = 'K1_HERO_V1',
+}) => {
+  // Get the active preset based on prop
+  const activePreset = PRESETS[visualPreset];
+
   // --- LEVA CONTROLS ---
   const params = useControls('K1 Lightwave Engine', {
     Timeline: folder({
@@ -55,7 +67,13 @@ export const K1Engine: React.FC<K1EngineProps> = ({ compositorRect }) => {
       timelineTime: { value: 0, min: 0, max: TIMELINE_DURATION, step: 0.1 },
     }),
     Modes: folder({
-      heroMode: { value: true },
+      opticsMode: {
+        value: activePreset.opticsMode,
+        options: ['HERO', 'PHYSICAL', 'EXPERIMENTAL'] as OpticsMode[],
+        label: 'Optics Mode',
+      },
+      mode: { value: 'Snapwave', options: ['Existing', 'Snapwave'] },
+      heroMode: { value: false },
     }),
     Visuals: folder({
       // Deprecated "falloff" and "spread" from here as they are now Optical properties
@@ -63,12 +81,18 @@ export const K1Engine: React.FC<K1EngineProps> = ({ compositorRect }) => {
       exposure: { value: K1_HERO_PRESET.visuals.exposure, min: 0.1, max: 20.0 },
       baseLevel: { value: K1_HERO_PRESET.visuals.baseLevel, min: 0.0, max: 1.0 },
       tint: { value: K1_HERO_PRESET.visuals.tint },
+      hueOffset: { value: K1_HERO_PRESET.visuals.hueOffset ?? 0, min: 0, max: 1, step: 0.001 },
+      autoColorShift: { value: K1_HERO_PRESET.visuals.autoColorShift ?? true },
 
       // Legacy fallbacks for timeline compatibility (will be ignored if Optics override)
       falloff: { value: 1.5, render: () => false },
       spread: { value: 0.015, render: () => false },
     }),
     Optics: folder({
+      syncTopBottomOptics: {
+        value: true,
+        label: 'Sync top/bottom',
+      },
       topSpreadNear: {
         value: K1_HERO_PRESET.optics.topSpreadNear,
         min: 0.0,
@@ -94,11 +118,28 @@ export const K1Engine: React.FC<K1EngineProps> = ({ compositorRect }) => {
       columnBoostExponent: { value: K1_HERO_PRESET.optics.columnBoostExponent, min: 0.5, max: 3.0 },
       edgeHotspotStrength: { value: K1_HERO_PRESET.optics.edgeHotspotStrength, min: 0.0, max: 5.0 },
       edgeHotspotWidth: { value: K1_HERO_PRESET.optics.edgeHotspotWidth, min: 0.0, max: 0.25 },
+      railInner: { value: K1_HERO_PRESET.optics.railInner, min: 0.0, max: 0.5, step: 0.001 },
+      railOuter: { value: K1_HERO_PRESET.optics.railOuter, min: 0.0, max: 0.5, step: 0.001 },
+      railSigma: { value: K1_HERO_PRESET.optics.railSigma, min: 0.5, max: 5.0, step: 0.01 },
+      prismCount: { value: K1_HERO_PRESET.optics.prismCount ?? 0, min: 0, max: 4, step: 1 },
+      prismOpacity: {
+        value: K1_HERO_PRESET.optics.prismOpacity ?? 0.35,
+        min: 0,
+        max: 1,
+        step: 0.01,
+      },
     }),
+    // ═══════════════════════════════════════════════════════════════════════════
+    // PHYSICS CONTROLS - CENTER ORIGIN MANDATE
+    // ⚠️ WARNING: motionMode MUST stay at 'Center Origin' for correct visuals
+    // 'Left Origin' and 'Right Origin' are DEPRECATED and will cause regressions
+    // ═══════════════════════════════════════════════════════════════════════════
     Physics: folder({
       motionMode: {
+        // ⚠️ CENTER ORIGIN MANDATE: Default MUST be 'Center Origin'
+        // Left/Right options exist for legacy/debug only - DO NOT USE IN PRODUCTION
         options: ['Center Origin', 'Left Origin', 'Right Origin'],
-        value: K1_HERO_PRESET.physics.motionMode,
+        value: K1_HERO_PRESET.physics.motionMode, // Defaults to 'Center Origin'
       },
       simulationSpeed: { value: K1_HERO_PRESET.physics.simulationSpeed, min: 0.1, max: 5.0 },
       decay: { value: K1_HERO_PRESET.physics.decay, min: 0.01, max: 0.5 },
@@ -114,39 +155,47 @@ export const K1Engine: React.FC<K1EngineProps> = ({ compositorRect }) => {
   });
 
   // --- TIMELINE CONTROLLER ---
-  const { effectiveVisuals, effectivePhysics, effectiveDiagnostics } = useTimelineController({
-    enabled: params.timelineEnabled,
-    loop: params.loop,
-    timelineTimeControl: params.timelineTime,
-    manualVisuals: {
-      falloff: params.falloff, // Legacy
-      exposure: params.exposure,
-      spread: params.spread, // Legacy
-      baseLevel: params.baseLevel,
-      tint: params.tint,
-    },
-    manualOptics: {
-      topSpreadNear: params.topSpreadNear,
-      topSpreadFar: params.topSpreadFar,
-      bottomSpreadNear: params.bottomSpreadNear,
-      bottomSpreadFar: params.bottomSpreadFar,
-      topFalloff: params.topFalloff,
-      bottomFalloff: params.bottomFalloff,
-      columnBoostStrength: params.columnBoostStrength,
-      columnBoostExponent: params.columnBoostExponent,
-      edgeHotspotStrength: params.edgeHotspotStrength,
-      edgeHotspotWidth: params.edgeHotspotWidth,
-    },
-    manualPhysics: {
-      motionMode: params.motionMode,
-      simulationSpeed: params.simulationSpeed,
-      decay: params.decay,
-      ghostAudio: params.ghostAudio,
-    },
-    manualDiagnostics: {
-      diagnosticMode: params.diagnosticMode,
-    },
-  });
+  const { effectiveVisuals, effectiveOptics, effectivePhysics, effectiveDiagnostics } =
+    useTimelineController({
+      enabled: params.timelineEnabled,
+      loop: params.loop,
+      timelineTimeControl: params.timelineTime,
+      manualVisuals: {
+        falloff: params.falloff, // Legacy
+        exposure: params.exposure,
+        spread: params.spread, // Legacy
+        baseLevel: params.baseLevel,
+        tint: params.tint,
+        hueOffset: params.hueOffset,
+        autoColorShift: params.autoColorShift,
+      },
+      manualOptics: {
+        topSpreadNear: params.topSpreadNear,
+        topSpreadFar: params.topSpreadFar,
+        bottomSpreadNear: params.bottomSpreadNear,
+        bottomSpreadFar: params.bottomSpreadFar,
+        topFalloff: params.topFalloff,
+        bottomFalloff: params.bottomFalloff,
+        columnBoostStrength: params.columnBoostStrength,
+        columnBoostExponent: params.columnBoostExponent,
+        edgeHotspotStrength: params.edgeHotspotStrength,
+        edgeHotspotWidth: params.edgeHotspotWidth,
+        prismCount: params.prismCount,
+        prismOpacity: params.prismOpacity,
+        railInner: params.railInner,
+        railOuter: params.railOuter,
+        railSigma: params.railSigma,
+      },
+      manualPhysics: {
+        motionMode: params.motionMode,
+        simulationSpeed: params.simulationSpeed,
+        decay: params.decay,
+        ghostAudio: params.ghostAudio,
+      },
+      manualDiagnostics: {
+        diagnosticMode: params.diagnosticMode,
+      },
+    });
 
   // --- PHYSICS KERNEL ---
   const { texBottom, texTop, ledCount } = useK1Physics({
@@ -156,97 +205,53 @@ export const K1Engine: React.FC<K1EngineProps> = ({ compositorRect }) => {
     motionMode: effectivePhysics.motionMode,
     diagnosticMode: effectiveDiagnostics.diagnosticMode as DiagnosticMode,
     heroMode: params.heroMode,
+    mode: params.mode as 'Existing' | 'Snapwave',
     heroLoopDuration: TIMELINE_DURATION,
+    autoColorShift: effectiveVisuals.autoColorShift ?? true,
+    hueOffset: effectiveVisuals.hueOffset ?? 0,
+    prismCount: effectiveOptics.prismCount ?? 0,
+    prismOpacity: effectiveOptics.prismOpacity ?? 0.35,
   });
 
-  // --- LAYER MANAGEMENT ---
-  const addLayer = useLayerManager((s) => s.addLayer);
-  const layers = useLayerManager((s) => s.layers);
+  const renderOptics = useMemo(() => {
+    const effectiveBottomSpreadNear = params.syncTopBottomOptics
+      ? effectiveOptics.topSpreadNear
+      : effectiveOptics.bottomSpreadNear;
+    const effectiveBottomSpreadFar = params.syncTopBottomOptics
+      ? effectiveOptics.topSpreadFar
+      : effectiveOptics.bottomSpreadFar;
+    const effectiveBottomFalloff = params.syncTopBottomOptics
+      ? effectiveOptics.topFalloff
+      : effectiveOptics.bottomFalloff;
 
-  useEffect(() => {
-    if (layers.length === 0) {
-      addLayer({
-        name: 'Core Edge Lit',
-        type: 'simulation',
-        visible: true,
-        opacity: 1.0,
-        blendMode: 'NORMAL',
-        uniforms: {},
-      });
-    }
-  }, [layers, addLayer]);
-
-  // --- UNIFORM SYNC ---
-  const edgeLitUniforms = useMemo(
-    () => ({
-      uLedStateBottom: { value: texBottom },
-      uLedStateTop: { value: texTop },
-      uResolution: { value: ledCount },
-
-      // Visuals
-      uExposure: { value: effectiveVisuals.exposure },
-      uBaseLevel: { value: effectiveVisuals.baseLevel },
-      uTint: { value: new THREE.Color(effectiveVisuals.tint) },
-
-      // Optics (Not controlled by timeline yet, driven by Leva "Optics" folder)
-      uTopFalloff: { value: params.topFalloff },
-      uBottomFalloff: { value: params.bottomFalloff },
-      uTopSpreadNear: { value: params.topSpreadNear },
-      uTopSpreadFar: { value: params.topSpreadFar },
-      uBottomSpreadNear: { value: params.bottomSpreadNear },
-      uBottomSpreadFar: { value: params.bottomSpreadFar },
-      uColumnBoostStrength: { value: params.columnBoostStrength },
-      uColumnBoostExponent: { value: params.columnBoostExponent },
-      uEdgeHotspotStrength: { value: params.edgeHotspotStrength },
-      uEdgeHotspotWidth: { value: params.edgeHotspotWidth },
-    }),
-    [] // Create once on mount
-  );
-
-  const uniformsRef = useRef(edgeLitUniforms);
-
-  // Imperatively update all uniform values every render
-  uniformsRef.current.uLedStateBottom.value = texBottom;
-  uniformsRef.current.uLedStateTop.value = texTop;
-  uniformsRef.current.uResolution.value = ledCount;
-
-  // Visuals (Timeline-driven)
-  uniformsRef.current.uExposure.value = effectiveVisuals.exposure;
-  uniformsRef.current.uBaseLevel.value = effectiveVisuals.baseLevel;
-  uniformsRef.current.uTint.value.set(effectiveVisuals.tint);
-
-  // Optics (Manual tuning)
-  uniformsRef.current.uTopFalloff.value = params.topFalloff;
-  uniformsRef.current.uBottomFalloff.value = params.bottomFalloff;
-  uniformsRef.current.uTopSpreadNear.value = params.topSpreadNear;
-  uniformsRef.current.uTopSpreadFar.value = params.topSpreadFar;
-  uniformsRef.current.uBottomSpreadNear.value = params.bottomSpreadNear;
-  uniformsRef.current.uBottomSpreadFar.value = params.bottomSpreadFar;
-  uniformsRef.current.uColumnBoostStrength.value = params.columnBoostStrength;
-  uniformsRef.current.uColumnBoostExponent.value = params.columnBoostExponent;
-  uniformsRef.current.uEdgeHotspotStrength.value = params.edgeHotspotStrength;
-  uniformsRef.current.uEdgeHotspotWidth.value = params.edgeHotspotWidth;
+    return {
+      ...effectiveOptics,
+      opticsMode: params.opticsMode as OpticsMode,
+      bottomSpreadNear: effectiveBottomSpreadNear,
+      bottomSpreadFar: effectiveBottomSpreadFar,
+      bottomFalloff: effectiveBottomFalloff,
+      railInner: effectiveOptics.railInner ?? K1_HERO_PRESET.optics.railInner,
+      railOuter: effectiveOptics.railOuter ?? K1_HERO_PRESET.optics.railOuter,
+      railSigma: effectiveOptics.railSigma ?? K1_HERO_PRESET.optics.railSigma,
+    };
+  }, [effectiveOptics, params.syncTopBottomOptics, params.opticsMode]);
 
   return (
-    <>
-      {/* Render each active layer to its FBO */}
-      {layers.map((layer) => (
-        <VisualLayer
-          key={layer.id}
-          layerId={layer.id}
-          vertexShader={edgeLitShader.vertex}
-          fragmentShader={edgeLitShader.fragment}
-          uniforms={uniformsRef.current}
-        />
-      ))}
-
-      {/* Composite them to the screen */}
-      <Compositor offset={compositorRect?.offset} scale={compositorRect?.scale} />
-
-      {/* Diagnostics */}
-      {params.showDebugOverlay && (
-        <DebugOverlay texTop={texTop} texBottom={texBottom} ledCount={ledCount} />
-      )}
-    </>
+    <K1CoreScene
+      texBottom={texBottom}
+      texTop={texTop}
+      ledCount={ledCount}
+      visuals={{
+        exposure: effectiveVisuals.exposure,
+        baseLevel: effectiveVisuals.baseLevel,
+        tint: effectiveVisuals.tint,
+      }}
+      optics={renderOptics}
+      diagnostics={{
+        diagnosticMode: effectiveDiagnostics.diagnosticMode as DiagnosticMode,
+        showDebugOverlay: params.showDebugOverlay,
+      }}
+      compositorRect={compositorRect}
+    />
   );
 };

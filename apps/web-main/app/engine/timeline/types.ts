@@ -11,6 +11,8 @@ export type TimelineParamTarget = {
   spread?: number;
   baseLevel?: number;
   tint?: string; // Hex color
+  hueOffset?: number;
+  autoColorShift?: boolean;
 
   // Optics
   topSpreadNear?: number;
@@ -23,6 +25,11 @@ export type TimelineParamTarget = {
   columnBoostExponent?: number;
   edgeHotspotStrength?: number;
   edgeHotspotWidth?: number;
+  prismCount?: number;
+  prismOpacity?: number;
+  railInner?: number;
+  railOuter?: number;
+  railSigma?: number;
 
   // Physics
   motionMode?: string;

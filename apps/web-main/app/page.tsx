@@ -260,8 +260,8 @@ async function submitAccessRequest(data: FormData) {
 function CTAForm() {
   return (
     <form
-      // @ts-ignore Next.js server actions allow function form actions despite React's type
-      action={submitAccessRequest as any}
+      // @ts-expect-error Next.js server actions allow function form actions despite React's type
+      action={submitAccessRequest}
       className="space-y-5 font-space"
     >
       <div className="space-y-2">
