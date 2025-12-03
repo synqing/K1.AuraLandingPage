@@ -11,5 +11,6 @@
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "typescript.tsdk": "node_modules/typescript/lib",
-  "idf.pythonInstallPath": "/Users/spectrasynq/miniforge3/bin/python"
+  "idf.pythonInstallPath": "/Users/spectrasynq/miniforge3/bin/python",
+  "claudeCodeChat.permissions.yoloMode": true
 }
