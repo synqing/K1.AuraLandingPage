@@ -1,5 +1,33 @@
 'use client';
 
+/**
+ * ╔═══════════════════════════════════════════════════════════════════════════╗
+ * ║                                                                           ║
+ * ║   ⚠️⚠️⚠️  LEGACY CODE - DO NOT USE - DO NOT MODIFY  ⚠️⚠️⚠️                  ║
+ * ║                                                                           ║
+ * ╠═══════════════════════════════════════════════════════════════════════════╣
+ * ║                                                                           ║
+ * ║   This file has been QUARANTINED. It is kept ONLY for historical         ║
+ * ║   reference. DO NOT import this component anywhere.                       ║
+ * ║                                                                           ║
+ * ║   REPLACEMENT: Use K1Engine from '@/app/engine/K1Engine'                  ║
+ * ║                                                                           ║
+ * ║   Migration:                                                              ║
+ * ║   - PHYSICAL mode: <K1Engine visualPreset="K1_PHYSICAL_V1" />             ║
+ * ║   - HERO mode: <K1Engine visualPreset="K1_HERO_V1" /> (or <K1Engine />)   ║
+ * ║                                                                           ║
+ * ║   WHY QUARANTINED:                                                        ║
+ * ║   - This monolithic simulation does NOT comply with the unified engine    ║
+ * ║   - It allows motionMode overrides that violate CENTER ORIGIN MANDATE     ║
+ * ║   - It lacks the Visual Layer System (VLS) compositor architecture        ║
+ * ║                                                                           ║
+ * ║   If you need simulation features, add them to the K1Engine instead.      ║
+ * ║                                                                           ║
+ * ╚═══════════════════════════════════════════════════════════════════════════╝
+ *
+ * @deprecated LEGACY MONOLITHIC SIMULATION - Use K1Engine instead
+ */
+
 import React, { useRef, useMemo } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';

@@ -9,6 +9,10 @@
   "scripts": {
     "dev": "npm run dev --workspace=apps/web-main",
     "build": "npm run build --workspace=apps/web-main",
-    "lint": "npm run lint --workspace=apps/web-main"
+    "lint": "npm run lint --workspace=apps/web-main",
+    "test:visual": "node tools/visual-regression/capture.js"
+  },
+  "devDependencies": {
+    "playwright": "^1.57.0"
   }
 }

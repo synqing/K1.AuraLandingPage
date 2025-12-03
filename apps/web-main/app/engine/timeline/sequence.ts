@@ -1,3 +1,26 @@
+/**
+ * ╔═══════════════════════════════════════════════════════════════════════════╗
+ * ║                K1 HERO TIMELINE - CENTER ORIGIN MANDATE                    ║
+ * ╠═══════════════════════════════════════════════════════════════════════════╣
+ * ║                                                                           ║
+ * ║  ⚠️  CRITICAL: ALL SEGMENTS MUST USE motionMode: 'Center Origin'  ⚠️      ║
+ * ║                                                                           ║
+ * ║  The CENTER ORIGIN MANDATE requires that ALL timeline segments            ║
+ * ║  maintain 'Center Origin' as the motionMode. This ensures light           ║
+ * ║  always emanates from the center of the LED strip symmetrically.          ║
+ * ║                                                                           ║
+ * ║  PROHIBITED VALUES:                                                       ║
+ * ║  - motionMode: 'Left Origin'   ← BREAKS center origin, light at edges     ║
+ * ║  - motionMode: 'Right Origin'  ← BREAKS center origin, light at edges     ║
+ * ║                                                                           ║
+ * ║  When adding new timeline segments:                                       ║
+ * ║  1. ALWAYS include motionMode: 'Center Origin' in the 'to' object         ║
+ * ║  2. NEVER change motionMode to Left/Right Origin                          ║
+ * ║  3. Verify visual output shows symmetric light from center                ║
+ * ║                                                                           ║
+ * ╚═══════════════════════════════════════════════════════════════════════════╝
+ */
+
 import { TimelineSequence } from './types';
 import { K1_HERO_PRESET } from '../presets';
 
@@ -62,7 +85,8 @@ export const K1_HERO_TIMELINE: TimelineSequence = [
     duration: 6.0,
     easing: 'linear',
     to: {
-      motionMode: 'Left Origin',
+      // CENTER ORIGIN MANDATE: Never deviate from center origin
+      motionMode: 'Center Origin',
       simulationSpeed: 1.2,
       decay: 0.15,
       // Maintain symmetric optics during flow
