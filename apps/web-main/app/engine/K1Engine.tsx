@@ -32,11 +32,9 @@ import { K1CoreScene } from '@/app/k1/core/view/K1CoreScene';
 import { K1_HERO_V1, K1_HERO_V2, K1_PHYSICAL_V1 } from '@/app/k1/core/optics/presets';
 
 // --- PRESET DEFINITIONS ---
-// K1_HERO_V2 is the new canonical hero: "Fluid columns with ribs in magenta-cyan glass"
 export const K1_HERO_PRESET = K1_HERO_V2;
 export const K1_PHYSICAL_PRESET = K1_PHYSICAL_V1;
 
-// Preset lookup map - includes V1 for A/B comparison
 const PRESETS = {
   K1_HERO_V1,
   K1_HERO_V2,
@@ -51,7 +49,6 @@ type K1EngineProps = {
     offset: [number, number];
     scale: [number, number];
   };
-  /** Override the default preset (defaults to K1_HERO_V1) */
   visualPreset?: PresetName;
 };
 
@@ -59,7 +56,6 @@ export const K1Engine: React.FC<K1EngineProps> = ({
   compositorRect,
   visualPreset = 'K1_HERO_V1',
 }) => {
-  // Get the active preset based on prop
   const activePreset = PRESETS[visualPreset];
 
   // --- LEVA CONTROLS ---
@@ -79,23 +75,16 @@ export const K1Engine: React.FC<K1EngineProps> = ({
       heroMode: { value: false },
     }),
     Visuals: folder({
-      // Deprecated "falloff" and "spread" from here as they are now Optical properties
-      // Keeping them if timeline targets them, but for tuning we use Optics
       exposure: { value: K1_HERO_PRESET.visuals.exposure, min: 0.1, max: 20.0 },
       baseLevel: { value: K1_HERO_PRESET.visuals.baseLevel, min: 0.0, max: 1.0 },
       tint: { value: K1_HERO_PRESET.visuals.tint },
       hueOffset: { value: K1_HERO_PRESET.visuals.hueOffset ?? 0, min: 0, max: 1, step: 0.001 },
       autoColorShift: { value: K1_HERO_PRESET.visuals.autoColorShift ?? true },
-
-      // Legacy fallbacks for timeline compatibility (will be ignored if Optics override)
       falloff: { value: 1.5, render: () => false },
       spread: { value: 0.015, render: () => false },
     }),
     Optics: folder({
-      syncTopBottomOptics: {
-        value: true,
-        label: 'Sync top/bottom',
-      },
+      syncTopBottomOptics: { value: true, label: 'Sync top/bottom' },
       topSpreadNear: {
         value: K1_HERO_PRESET.optics.topSpreadNear,
         min: 0.0,
@@ -132,18 +121,8 @@ export const K1Engine: React.FC<K1EngineProps> = ({
         step: 0.01,
       },
     }),
-    // ═══════════════════════════════════════════════════════════════════════════
-    // PHYSICS CONTROLS - CENTER ORIGIN MANDATE
-    // ⚠️ WARNING: motionMode MUST stay at 'Center Origin' for correct visuals
-    // 'Left Origin' and 'Right Origin' are DEPRECATED and will cause regressions
-    // ═══════════════════════════════════════════════════════════════════════════
     Physics: folder({
-      motionMode: {
-        // ⚠️ CENTER ORIGIN MANDATE: Only 'Center Origin' is permitted
-        // Left/Right Origin options have been REMOVED - they violate the mandate
-        options: ['Center Origin'] as const,
-        value: 'Center Origin',
-      },
+      motionMode: { options: ['Center Origin'] as const, value: 'Center Origin' },
       simulationSpeed: { value: K1_HERO_PRESET.physics.simulationSpeed, min: 0.1, max: 5.0 },
       decay: { value: K1_HERO_PRESET.physics.decay, min: 0.01, max: 0.5 },
       ghostAudio: { value: K1_HERO_PRESET.physics.ghostAudio },
@@ -164,9 +143,9 @@ export const K1Engine: React.FC<K1EngineProps> = ({
       loop: params.loop,
       timelineTimeControl: params.timelineTime,
       manualVisuals: {
-        falloff: params.falloff, // Legacy
+        falloff: params.falloff,
         exposure: params.exposure,
-        spread: params.spread, // Legacy
+        spread: params.spread,
         baseLevel: params.baseLevel,
         tint: params.tint,
         hueOffset: params.hueOffset,
@@ -205,7 +184,6 @@ export const K1Engine: React.FC<K1EngineProps> = ({
     simulationSpeed: effectivePhysics.simulationSpeed,
     decay: effectivePhysics.decay,
     ghostAudio: effectivePhysics.ghostAudio,
-    // CENTER ORIGIN MANDATE: Cast to literal type - value is always 'Center Origin'
     motionMode: effectivePhysics.motionMode as MotionMode,
     diagnosticMode: effectiveDiagnostics.diagnosticMode as DiagnosticMode,
     heroMode: params.heroMode,
