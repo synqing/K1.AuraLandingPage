@@ -8,3 +8,9 @@ build/
 .env.local
 *.log
 coverage/
+
+# Screenshots: allow only in docs/screenshots/, ignore root-level PNGs
+/*.png
+
+# Prototypes (experimental code, not built into main project)
+_prototypes/
