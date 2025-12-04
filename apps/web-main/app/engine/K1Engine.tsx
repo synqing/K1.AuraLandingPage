@@ -71,7 +71,7 @@ export const K1Engine: React.FC<K1EngineProps> = ({
         options: ['HERO', 'PHYSICAL', 'EXPERIMENTAL'] as OpticsMode[],
         label: 'Optics Mode',
       },
-      mode: { value: 'Snapwave', options: ['Existing', 'Snapwave'] },
+      mode: { value: 'Snapwave', options: ['Existing', 'Snapwave', 'Bloom'] },
       heroMode: { value: false },
     }),
     Visuals: folder({
@@ -187,7 +187,7 @@ export const K1Engine: React.FC<K1EngineProps> = ({
     motionMode: effectivePhysics.motionMode as MotionMode,
     diagnosticMode: effectiveDiagnostics.diagnosticMode as DiagnosticMode,
     heroMode: params.heroMode,
-    mode: params.mode as 'Existing' | 'Snapwave',
+    mode: params.mode as 'Existing' | 'Snapwave' | 'Bloom',
     heroLoopDuration: TIMELINE_DURATION,
     autoColorShift: effectiveVisuals.autoColorShift ?? true,
     hueOffset: effectiveVisuals.hueOffset ?? 0,
