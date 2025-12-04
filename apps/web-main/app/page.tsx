@@ -83,7 +83,7 @@ export default function Page() {
               <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(255,184,77,0.4)_0,transparent_55%)] blur-3xl mix-blend-screen opacity-50" />
             </div>
 
-            <div className="relative mt-8 w-full px-2 sm:px-8 flex justify-center">
+            <div className="relative mt-8 w-full px-2 sm:px-8 flex flex-col items-center">
               <div className="relative aspect-[32/6] w-[min(90vw,60rem)] max-w-[60rem] overflow-hidden rounded-[1.75rem] border border-white/5 bg-black shadow-[0_0_4rem_rgba(0,0,0,0.9)]">
                 <LandingViz />
               </div>

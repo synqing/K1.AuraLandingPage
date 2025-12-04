@@ -46,7 +46,7 @@ interface PhysicsParams {
   diagnosticMode: DiagnosticMode;
   heroMode?: boolean;
   heroLoopDuration?: number;
-  mode?: 'Existing' | 'Snapwave';
+  mode?: 'Existing' | 'Snapwave' | 'Bloom';
   autoColorShift?: boolean;
   hueOffset?: number;
   prismCount?: number;
@@ -78,6 +78,7 @@ export function useK1Physics(params: PhysicsParams) {
 
   const physicsState = useRef({
     field: new Float32Array(LED_COUNT * LED_STRIDE),
+    fieldPrev: new Float32Array(LED_COUNT * LED_STRIDE), // For Bloom sprite blending
     huePos: 0.0,
     time: 0,
     lastPhase: 0,
@@ -85,6 +86,7 @@ export function useK1Physics(params: PhysicsParams) {
     bottomBuf: new Float32Array(LED_COUNT * LED_STRIDE),
     waveformPeakScaled: 0,
     waveformPeakScaledLast: 0,
+    chromagram: new Float32Array(12), // 12 musical notes (C through B)
   });
 
   // --- HELPERS ---
@@ -307,6 +309,169 @@ export function useK1Physics(params: PhysicsParams) {
       addColor(field, posLeft, col.r, col.g, col.b, intensity); // LEFT injection
       addColor(field, posRight, col.r, col.g, col.b, intensity); // RIGHT injection
 
+      bottom.set(field);
+      for (let i = 0; i < LED_COUNT; i++) {
+        const src = i * LED_STRIDE;
+        const dst = (LED_COUNT - 1 - i) * LED_STRIDE;
+        top[dst] = field[src];
+        top[dst + 1] = field[src + 1];
+        top[dst + 2] = field[src + 2];
+        top[dst + 3] = field[src + 3];
+      }
+
+      texBottom.image.data.set(bottom);
+      texBottom.needsUpdate = true;
+      texTop.image.data.set(top);
+      texTop.needsUpdate = true;
+      return;
+    }
+
+    /**
+     * ═══════════════════════════════════════════════════════════════════════════
+     * BLOOM MODE - Ported from Sensorybridge firmware light_mode_bloom()
+     * ═══════════════════════════════════════════════════════════════════════════
+     *
+     * Algorithm:
+     * 1. draw_sprite: Blend previous frame with alpha=0.99 (temporal persistence)
+     * 2. Chromagram synthesis: Sum 12 bins → single RGB color
+     * 3. Center injection at positions 79/80 (CENTER ORIGIN COMPLIANT)
+     * 4. Edge fade + mirror
+     *
+     * Source: lightshow_modes.h lines 398-499
+     * ═══════════════════════════════════════════════════════════════════════════
+     */
+    if (params.diagnosticMode === 'NONE' && params.mode === 'Bloom') {
+      const bottom = s.bottomBuf;
+      const top = s.topBuf;
+      const fieldPrev = s.fieldPrev;
+      const chromagram = s.chromagram;
+      const center = Math.floor(LED_COUNT / 2); // 80
+
+      // --- Simulate chromagram from ghost audio (12 bins for musical notes) ---
+      // Only 2-3 bins active at once (like real music) to get DISTINCT COLORS not white
+      let totalMagnitude = 0;
+      if (params.ghostAudio) {
+        const beatPhase = (s.time * 1.2) % 1.0;
+        const envelope = Math.max(0.0, Math.sin(beatPhase * Math.PI));
+
+        // Dominant note cycles through chromagram over time
+        const dominantNote = Math.floor((s.time * 0.5) % 12);
+
+        for (let i = 0; i < 12; i++) {
+          // Only bins near the dominant note are active
+          const distFromDominant = Math.min(
+            Math.abs(i - dominantNote),
+            12 - Math.abs(i - dominantNote) // wrap around
+          );
+
+          if (distFromDominant <= 1) {
+            // Strong for dominant and adjacent notes
+            chromagram[i] = envelope * (0.8 - distFromDominant * 0.3);
+          } else {
+            // Very weak for distant notes
+            chromagram[i] = envelope * 0.05;
+          }
+          totalMagnitude += chromagram[i];
+        }
+      }
+
+      // === STEP 1: CLEAR output to zero ===
+      field.fill(0);
+
+      // === STEP 2: draw_sprite - blend previous frame with alpha ===
+      // Firmware: draw_sprite(leds_16, leds_16_prev, 128, 128, 0.250 + 1.750 * CONFIG.MOOD, 0.99)
+      // CONFIG.MOOD changes with audio - THIS CREATES THE WAVE MOTION
+      const alpha = 0.97; // Slightly faster fade for more motion
+      // MUCH more dynamic mood - full 0→1 range with beat envelope
+      const beatPhase2 = (s.time * 1.2) % 1.0;
+      const beatEnvelope = Math.pow(Math.max(0, Math.sin(beatPhase2 * Math.PI)), 0.5);
+      const mood = beatEnvelope; // Full 0→1 range with beat
+      const position = 0.0 + 3.0 * mood; // LARGER range: 0 → 3 pixels drift
+      const positionWhole = Math.floor(position);
+      const positionFract = position - positionWhole;
+      const mixRight = positionFract;
+      const mixLeft = 1.0 - mixRight;
+
+      for (let i = 0; i < LED_COUNT; i++) {
+        const posLeft = i + positionWhole;
+        const posRight = i + positionWhole + 1;
+
+        if (posLeft >= 0 && posLeft < LED_COUNT) {
+          const srcIdx = i * LED_STRIDE;
+          const dstIdx = posLeft * LED_STRIDE;
+          field[dstIdx] += fieldPrev[srcIdx] * mixLeft * alpha;
+          field[dstIdx + 1] += fieldPrev[srcIdx + 1] * mixLeft * alpha;
+          field[dstIdx + 2] += fieldPrev[srcIdx + 2] * mixLeft * alpha;
+        }
+        if (posRight >= 0 && posRight < LED_COUNT) {
+          const srcIdx = i * LED_STRIDE;
+          const dstIdx = posRight * LED_STRIDE;
+          field[dstIdx] += fieldPrev[srcIdx] * mixRight * alpha;
+          field[dstIdx + 1] += fieldPrev[srcIdx + 1] * mixRight * alpha;
+          field[dstIdx + 2] += fieldPrev[srcIdx + 2] * mixRight * alpha;
+        }
+      }
+
+      // === STEP 3: Chromagram color synthesis ===
+      // Share controls contribution per bin - higher = more vibrant
+      const share = 1.0 / 4.0; // Increased from 1/6 for more vibrancy
+      let sumR = 0,
+        sumG = 0,
+        sumB = 0;
+
+      for (let i = 0; i < 12; i++) {
+        const hue = i / 12.0;
+        const bin = chromagram[i];
+        // Use sqrt instead of square for less aggressive compression
+        const value = Math.sqrt(bin) * share;
+        const col = hsvToRgb(hue, 1.0, value);
+        sumR += col.r;
+        sumG += col.g;
+        sumB += col.b;
+      }
+
+      // Soft clamp with headroom for HDR
+      if (sumR > 2.0) sumR = 2.0;
+      if (sumG > 2.0) sumG = 2.0;
+      if (sumB > 2.0) sumB = 2.0;
+
+      // === STEP 4: Center injection (positions 79/80) ===
+      const idxLeft = (center - 1) * LED_STRIDE;
+      const idxRight = center * LED_STRIDE;
+      field[idxLeft] = sumR;
+      field[idxLeft + 1] = sumG;
+      field[idxLeft + 2] = sumB;
+      field[idxLeft + 3] = 1.0;
+      field[idxRight] = sumR;
+      field[idxRight + 1] = sumG;
+      field[idxRight + 2] = sumB;
+      field[idxRight + 3] = 1.0;
+
+      // === STEP 5: Copy current to prev ===
+      fieldPrev.set(field);
+
+      // === STEP 6: Edge fade (last 32 pixels on right side) ===
+      const fadeLength = Math.floor(LED_COUNT * 0.2); // 32 for 160 LEDs
+      for (let i = 0; i < fadeLength; i++) {
+        const prog = i / (fadeLength - 1);
+        const fadeMultiplier = prog * prog;
+        const idx = (LED_COUNT - 1 - i) * LED_STRIDE;
+        field[idx] *= fadeMultiplier;
+        field[idx + 1] *= fadeMultiplier;
+        field[idx + 2] *= fadeMultiplier;
+      }
+
+      // === STEP 7: Mirror - copy right half to left half ===
+      for (let i = 0; i < center; i++) {
+        const srcIdx = (LED_COUNT - 1 - i) * LED_STRIDE;
+        const dstIdx = i * LED_STRIDE;
+        field[dstIdx] = field[srcIdx];
+        field[dstIdx + 1] = field[srcIdx + 1];
+        field[dstIdx + 2] = field[srcIdx + 2];
+        field[dstIdx + 3] = field[srcIdx + 3];
+      }
+
+      // === Update textures ===
       bottom.set(field);
       for (let i = 0; i < LED_COUNT; i++) {
         const src = i * LED_STRIDE;
